@@ -1,0 +1,4 @@
+version=`cat scramble/__version.py | cut -d'=' -f2 | sed -e "s/'//g"`
+sed -e "s/__VERSION__/${version}/g" installer.cfg > v_installer.cfg
+pynsist v_installer.cfg
+rm v_installer.cfg

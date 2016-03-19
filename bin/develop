@@ -1,0 +1,4 @@
+rmvirtualenv scramble
+mkvirtualenv scramble
+add2virtualenv .
+workon scramble

@@ -1,0 +1,35 @@
+login:
+html page = 1 hour
+User class = 1 hours
+Lobby class = 5 hours
+do_POST(login) = 1 hour
+
+7 hours
+
+lobby:
+lobby.js = 4 hours
+Engine class = 8 hours
+do_GET(/lobby/userid) = 1 hour
+
+13 hours
+
+game/gameid/puzzle:
+Puzzle class = 4 hours
+puzzle.js = 4 hours
+
+8 hours
+
+game/gameid/userid:
+Game class = 8 hours
+Metrics = 8 hours
+User class = 1 hour
+
+17 hours
+
+-----------------------
+13
+7
+8
+17
+=
+45 hours

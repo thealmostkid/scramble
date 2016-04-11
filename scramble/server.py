@@ -1,4 +1,7 @@
 import BaseHTTPServer
+import cgi
+import urlparse
+import random
 
 # POST /login?user=someone - redirects to lobby.  Cookie?
 # GET /lobby - returns lobby js code.
@@ -104,24 +107,90 @@ class Lobby(object):
             return Game()
 
 class ScrambleServer(BaseHTTPServer.BaseHTTPRequestHandler):
-    def do_GET(self):
-        if '/poll' == self.path:
-            self._poll()
-        elif self.path.endswith('.js'):
-            self.load_js()
-        elif self.path.endswith('.html'):
-            self._html()
-        else:
-            self.send_error(500, 'Not implemented for %s' % self.path)
+    def __init__(self, request, client_address, server):
+        BaseHTTPServer.BaseHTTPRequestHandler.__init__(self, request,
+                client_address, server)
 
-    def _poll(self):
+    def do_GET(self):
+        paths = dict()
+        paths['puzzle'] = self.puzzle_get
+        paths['poll'] = self.poll_get
+
+        incoming = urlparse.urlparse(self.path)
+        qs = urlparse.parse_qs(incoming.query)
+        print 'qs = %s' % qs
+
+        path_parts = incoming.path.split('/')
+        while path_parts[0] == '':
+            path_parts.pop(0)
+
+        print 'PARTS %s' % path_parts
+        if path_parts[0] in paths:
+            paths[path_parts[0]](path_parts, qs)
+        elif 'status' in incoming.path:
+            self.send_response(200)
+            self.send_header('Content-type',    'application/json')
+            self.end_headers()
+            self.wfile.write('%d' % random.randint(0, 10000))
+        elif incoming.path.endswith('.js'):
+            self.load_js(incoming.path, qs)
+        elif incoming.path.endswith('.html'):
+            self._html(path_parts, qs)
+        else:
+            self.send_error(500, 'Get not implemented for %s' % incoming.path)
+
+    def do_POST(self):
+        paths = dict()
+        paths['puzzle'] = self.puzzle_post
+
+        incoming = urlparse.urlparse(self.path)
+        path_parts = incoming.path.split('/')
+        while path_parts[0] == '':
+            path_parts.pop(0)
+
+        print "======= POST STARTED ======="
+        print self.headers
+        form = cgi.FieldStorage(
+                fp=self.rfile,
+                headers=self.headers,
+                environ={'REQUEST_METHOD':'POST',
+                    'CONTENT_TYPE':self.headers['Content-Type'],
+                    })
+        print "======= POST VALUES ======="
+        for item in form.list:
+            print '%s\n' % item
+        qs = dict()
+        for key in form.keys():
+            value = form.getvalue(key)
+            if type(value) != type(list()):
+                value = [value]
+            qs[key] = value
+
+        print 'qs = %s' % qs
+        if path_parts[0] in paths:
+            paths[path_parts[0]](path_parts, qs)
+        else:
+            self.send_error(404, 'Post not implemented for %s' % self.path)
+
+    def puzzle_get(self, path_parts, params):
+        '''
+        Endpoint for loading puzzles.
+        '''
+        print 'Puzzle on %s' % params
+        return self._html(['puzzle.html'], params)
+
+    def puzzle_post(self, path_parts, params):
+        print 'Guess on %s' % params
+        return self._html(['puzzle.html'], params)
+
+    def poll_get(self, path_parts, params):
         self.send_response(200)
         self.send_header('Content-type',    'application/json')
         self.end_headers()
         self.wfile.write('[1,2]')
         return
 
-    def load_js(self):
+    def load_js(self, url, params):
         f = open('js/%s' % self.path)
         self.send_response(200)
         self.send_header('Content-type',    'application/javascript')
@@ -130,8 +199,8 @@ class ScrambleServer(BaseHTTPServer.BaseHTTPRequestHandler):
         f.close()
         return
 
-    def _html(self):
-        f = open('html/%s' % self.path)
+    def _html(self, path_parts, params):
+        f = open('html/%s' % path_parts[-1])
         self.send_response(200)
         self.send_header('Content-type',    'text/html')
         self.end_headers()

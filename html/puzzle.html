@@ -1,0 +1,88 @@
+<html>
+        <head>
+                <script type="text/javascript"
+                                            src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+                 <script type="text/javascript">
+                         var local = {gid:"g1",
+                                 uid:"u0",
+                                 pid:3,
+                                 scramble:"ijklmop"};
+                 </script>
+                <script type="text/javascript">
+                        (function p() {
+                                $.getJSON('/game/status/' + local.gid)
+                                .done(function(data) {
+                                     document.getElementById('activity').innerHTML = "<p>" + data + "</p>";
+                                     setTimeout(p, 1000);
+                                        })
+                                .fail(function() {
+                                     document.getElementById('activity').innerHTML = "<p>Error</p>";
+                                        })
+                                .always(function() {
+                                        }) ;
+                                })();
+
+                        function writePuzzleLink(pid, linkText) {
+                                document.write('<a href="/puzzle/' + local.gid +
+                                                '?u=' + local.uid +
+                                                '&p=' + pid +
+                                                '">');
+                                document.write(linkText);
+                                document.write('</a>');
+                        }
+                </script>
+
+        </head>
+        <body>
+                <h1>
+                        Puzzle <script type="text/javascript">document.write(local.pid)</script>
+                </h1>
+                <!-- activity -->
+                <div class="activity" id="activity"
+                        style="border:1px solid black;">
+                        Loading...
+                </div>
+
+                <!-- previous puzzle -->
+                <div style="float:left">
+                <script type="text/javascript">
+                        if (local.pid > 0) {
+                            writePuzzleLink(local.pid - 1, "Previous Puzzle");
+                        }
+                </script>
+                </div>
+
+                <!-- scramble -->
+                <div class="puzzle" style="float:center">
+                        <script type="test/javascript">
+                                document.write(local.scramble);
+                        </script>
+
+                <!-- guess -->
+                <form action="/puzzle/guess" method="post">
+                        <input type="text" name="l1" maxlength=1 size=1>
+                        <input type="text" name="l2" maxlength=1 size=1>
+                        <input type="text" name="l3" maxlength=1 size=1>
+                        <input type="text" name="l4" maxlength=1 size=1>
+                        <input type="text" name="l5" maxlength=1 size=1>
+                        <input type="text" name="l6" maxlength=1 size=1>
+                        <input type="text" name="l7" maxlength=1 size=1 value="">
+                        <script type="text/javascript">
+                                document.write('<input type="hidden" name="pid" value="' + local.pid + '">')
+                        </script>
+                        <br>
+                        <input type="submit" value="Submit Guess">
+                </form>
+                </div>
+
+                <!-- next puzzle -->
+                <div style="float:right">
+                <script type="text/javascript">
+                        if (local.pid < 7) {
+                            writePuzzleLink(local.pid + 1, "Next Puzzle");
+                        }
+                </script>
+                </div>
+
+        </body>
+</html>

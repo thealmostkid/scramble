@@ -3,10 +3,12 @@
                 <script type="text/javascript"
                                             src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
                  <script type="text/javascript">
-                         var local = {gid:"g1",
+                         var ignored = {gid:"g1",
                                  uid:"u0",
                                  pid:3,
+                                 previous:2,
                                  scramble:"ijklmop"};
+                         LOCAL
                  </script>
                 <script type="text/javascript">
                         (function p() {
@@ -23,9 +25,9 @@
                                 })();
 
                         function writePuzzleLink(pid, linkText) {
-                                document.write('<a href="/puzzle/' + local.gid +
+                                document.write('<a href="/puzzle/' + pid +
                                                 '?u=' + local.uid +
-                                                '&p=' + pid +
+                                                '&g=' + local.gid +
                                                 '">');
                                 document.write(linkText);
                                 document.write('</a>');
@@ -35,7 +37,15 @@
         </head>
         <body>
                 <h1>
-                        Puzzle <script type="text/javascript">document.write(local.pid)</script>
+                Puzzle <script type="text/javascript">
+                        document.write(local.pid)
+        if (local.state) {
+                document.write('(' + local.state + ')')
+        }
+if (message !== undefined) {
+        document.write('<i>' + message + '</i>');
+}
+                </script>
                 </h1>
                 <!-- activity -->
                 <div class="activity" id="activity"
@@ -46,17 +56,20 @@
                 <!-- previous puzzle -->
                 <div style="float:left">
                 <script type="text/javascript">
-                        if (local.pid > 0) {
-                            writePuzzleLink(local.pid - 1, "Previous Puzzle");
+                        if (local.previous != null) {
+                            writePuzzleLink(local.previous, "Previous Puzzle");
                         }
                 </script>
                 </div>
 
                 <!-- scramble -->
                 <div class="puzzle" style="float:center">
-                        <script type="test/javascript">
-                                document.write(local.scramble);
-                        </script>
+                        <div class="scramble">
+                                <p><b>Scramble = &quot;
+                        <script type="text/javascript">document.write(local.scramble)</script>
+                        &quot;
+                </b></p>
+                </div>
 
                 <!-- guess -->
                 <form action="/puzzle/guess" method="post">
@@ -78,8 +91,8 @@
                 <!-- next puzzle -->
                 <div style="float:right">
                 <script type="text/javascript">
-                        if (local.pid < 7) {
-                            writePuzzleLink(local.pid + 1, "Next Puzzle");
+                        if (local.next != null) {
+                            writePuzzleLink(local.next, "Next Puzzle");
                         }
                 </script>
                 </div>

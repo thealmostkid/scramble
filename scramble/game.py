@@ -1,3 +1,4 @@
+import scramble.puzzle
 # GET /game/gameid returns puzzle.js.  
 # 
 # puzzle.js GET /game/gameid/userid for puzzle id
@@ -9,4 +10,17 @@
 # at end of round puzzle_id returns "locked"
 
 # transition screen when game is locked
+class Game(object):
+    def __init__(self):
+        self.puzzles = list()
+        self.puzzles_index = dict()
+        for i in xrange(3):
+            puzzle = scramble.puzzle.Puzzle('jeremy%d' % i, str(i))
+            if i > 0:
+                puzzle.prev_puzzle = self.puzzles[i - 1]
+                puzzle.prev_puzzle.next_puzzle = puzzle
+            self.puzzles.append(puzzle)
+            self.puzzles_index[puzzle.nonce] = puzzle
 
+    def get_puzzle(self, pid):
+        return self.puzzles_index[pid]

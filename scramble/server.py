@@ -203,7 +203,7 @@ def MakeHandlerClassFromArgv(game):
     
         def puzzle_post(self, path_parts, params):
             print 'Guess on %s' % params
-            puzzle_id = params['pid'][0]
+            puzzle_id = path_parts[1]
             puzzle = game.get_puzzle(puzzle_id)
             # TODO: error checking!!!
 
@@ -221,9 +221,8 @@ def MakeHandlerClassFromArgv(game):
             else:
                 guess_message += 'incorrect'
             # TODO: put gid, uid into params
-            # TODO: redirect
-            return self.puzzle_get(['puzzle', puzzle_id],
-                    {'message':[guess_message]})
+            params['message'] = [guess_message]
+            return self.puzzle_get(['puzzle', puzzle_id], params)
     
         def poll_get(self, path_parts, params):
             self.send_response(200)

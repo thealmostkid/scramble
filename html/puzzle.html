@@ -9,8 +9,6 @@
                                  previous:2,
                                  scramble:"ijklmop"};
                          LOCAL
-                 </script>
-                <script type="text/javascript">
                         (function p() {
                                 $.getJSON('/game/status/' + local.gid)
                                 .done(function(data) {
@@ -42,11 +40,13 @@
         if (local.state) {
                 document.write('(' + local.state + ')')
         }
-if (message !== undefined) {
-        document.write('<i>' + message + '</i>');
-}
                 </script>
                 </h1>
+                <script type="text/javascript">
+if (message !== undefined) {
+        document.write('<p><font color="red"><i>' + message + '</i></font></p>');
+}
+</script>
                 <!-- activity -->
                 <div class="activity" id="activity"
                         style="border:1px solid black;">
@@ -72,20 +72,22 @@ if (message !== undefined) {
                 </div>
 
                 <!-- guess -->
-                <form action="/puzzle/guess" method="post">
-                        <input type="text" name="l1" maxlength=1 size=1>
-                        <input type="text" name="l2" maxlength=1 size=1>
-                        <input type="text" name="l3" maxlength=1 size=1>
-                        <input type="text" name="l4" maxlength=1 size=1>
-                        <input type="text" name="l5" maxlength=1 size=1>
-                        <input type="text" name="l6" maxlength=1 size=1>
-                        <input type="text" name="l7" maxlength=1 size=1 value="">
-                        <script type="text/javascript">
+                <script type="text/javascript">
+                        if (local.state != "solved") {
+                document.write('<form action="' + document.URL + '" method="post">');
+                        document.write('<input type="text" name="l1" maxlength=1 size=1>');
+                        document.write('<input type="text" name="l2" maxlength=1 size=1>');
+                        document.write('<input type="text" name="l3" maxlength=1 size=1>');
+                        document.write('<input type="text" name="l4" maxlength=1 size=1>');
+                        document.write('<input type="text" name="l5" maxlength=1 size=1>');
+                        document.write('<input type="text" name="l6" maxlength=1 size=1>');
+                        document.write('<input type="text" name="l7" maxlength=1 size=1 value="">');
                                 document.write('<input type="hidden" name="pid" value="' + local.pid + '">')
-                        </script>
-                        <br>
-                        <input type="submit" value="Submit Guess">
-                </form>
+                        document.write('<br>');
+                        document.write('<input type="submit" value="Submit Guess">');
+                document.write('</form>');
+                        }
+                </script>
                 </div>
 
                 <!-- next puzzle -->

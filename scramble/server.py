@@ -2,8 +2,10 @@ import BaseHTTPServer
 import cgi
 import urlparse
 import random
-import scramble.game
 import json
+
+import scramble.game
+import scramble.user
 
 # POST /login?user=someone - redirects to lobby.  Cookie?
 # GET /lobby - returns lobby js code.
@@ -52,11 +54,6 @@ import json
 # GET /game/gameid/userid returns json
 
 games = dict()
-
-class User(object):
-    def __init__(self, userid):
-        self.puzzle_id = 0
-        pass
 
 #class Game(object):
 #    def __init__(self, gameid):
@@ -107,6 +104,7 @@ def MakeHandlerClassFromArgv(game):
             paths = dict()
             paths['puzzle'] = self.puzzle_get
             paths['poll'] = self.poll_get
+            paths['game'] = self.game_get
     
             incoming = urlparse.urlparse(self.path)
             qs = urlparse.parse_qs(incoming.query)
@@ -119,11 +117,6 @@ def MakeHandlerClassFromArgv(game):
             print 'PARTS %s' % path_parts
             if path_parts[0] in paths:
                 paths[path_parts[0]](path_parts, qs)
-            elif 'status' in incoming.path:
-                self.send_response(200)
-                self.send_header('Content-type',    'application/json')
-                self.end_headers()
-                self.wfile.write('%d' % random.randint(0, 10000))
             elif incoming.path.endswith('.js'):
                 self.load_js(incoming.path, qs)
             elif incoming.path.endswith('.html'):
@@ -164,6 +157,34 @@ def MakeHandlerClassFromArgv(game):
             else:
                 self.send_error(404, 'Post not implemented for %s' % self.path)
     
+        #
+        # game API
+        #
+        def _game_status(self, path_parts, params):
+            gid = path_parts[2]
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+
+            # list of each user
+            users = list()
+            for user in game.users:
+                users.append({'name': user.userid,
+                    'puzzle': user.puzzleid})
+            user_string = json.dumps(users)
+            self.wfile.write('%s' % user_string)
+            return
+
+        def game_get(self, path_parts, params):
+            print 'GAMING IT on %s' % path_parts
+            if path_parts[1] == 'status':
+                return self._game_status(path_parts, params)
+            else:
+                self.send_error(404)
+
+        #
+        # puzzle API
+        #
         def puzzle_get(self, path_parts, params):
             '''
             Endpoint for loading puzzles.
@@ -258,6 +279,9 @@ def run(server_class=BaseHTTPServer.HTTPServer,
     httpd.serve_forever()
 
 if __name__ == '__main__':
-    game = scramble.game.Game()
+    users = list()
+    for i in xrange(2):
+        users.append(scramble.user.User('u%d' % i))
+    game = scramble.game.Game(users)
     HandlerClass = MakeHandlerClassFromArgv(game)
     run(handler_class=HandlerClass)

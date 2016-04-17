@@ -3,6 +3,7 @@
                 <script type="text/javascript"
                                             src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
                  <script type="text/javascript">
+                         var message = undefined;
                          var ignored = {gid:"g1",
                                  uid:"u0",
                                  pid:3,
@@ -12,7 +13,15 @@
                         (function p() {
                                 $.getJSON('/game/status/' + local.gid)
                                 .done(function(data) {
-                                     document.getElementById('activity').innerHTML = "<p>" + data + "</p>";
+                                     html = '<ul>';
+                                     for (i = 0; i < data.length; i++) {
+                                        html += '<li>';
+                                        html += 'User "' + data[i].name + '" ';
+                                        html += 'Puzzle "' + data[i].puzzle + '"';
+                                        html += '</li>';
+                                     }
+                                     html += '</ul>';
+                                     document.getElementById('activity').innerHTML = "<p>" + html + "</p>";
                                      setTimeout(p, 1000);
                                         })
                                 .fail(function() {

@@ -11,7 +11,10 @@ import scramble.puzzle
 
 # transition screen when game is locked
 class Game(object):
-    def __init__(self):
+    def __init__(self, users):
+        self.users = users
+
+        # TODO: load from puzzle database
         self.puzzles = list()
         self.puzzles_index = dict()
         for i in xrange(3):

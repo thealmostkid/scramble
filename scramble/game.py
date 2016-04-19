@@ -11,8 +11,12 @@ import scramble.puzzle
 
 # transition screen when game is locked
 class Game(object):
-    def __init__(self, users):
+    def __init__(self, gid, users):
+        self.gid = gid
         self.users = users
+        self.users_index = dict()
+        for user in self.users:
+            self.users_index[user.uid] = user
 
         # TODO: load from puzzle database
         self.puzzles = list()
@@ -23,7 +27,15 @@ class Game(object):
                 puzzle.prev_puzzle = self.puzzles[i - 1]
                 puzzle.prev_puzzle.next_puzzle = puzzle
             self.puzzles.append(puzzle)
-            self.puzzles_index[puzzle.nonce] = puzzle
+            self.puzzles_index[puzzle.pid] = puzzle
+
+        # all players start game at first puzzle
+        for user in users:
+            user.puzzle = self.puzzles[0]
 
     def get_puzzle(self, pid):
         return self.puzzles_index[pid]
+
+    def get_user(self, uid):
+        print 'looking for %s in %s' % (uid, self.users_index)
+        return self.users_index[uid]

@@ -1,11 +1,10 @@
 import json
 
 class User(object):
-    def __init__(self, userid):
-        self.puzzleid = None
-        self.userid = userid
-        pass
+    def __init__(self, uid):
+        self.puzzle = None
+        self.uid = uid
 
     def to_JSON(self):
-        values = {'name': self.userid, 'puzzle': self.puzzleid}
+        values = {'name': self.uid, 'puzzle': self.puzzle.pid}
         return json.dumps(values)

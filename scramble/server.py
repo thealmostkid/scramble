@@ -7,6 +7,7 @@ import json
 import scramble.game
 import scramble.user
 
+
 # POST /login?user=someone - redirects to lobby.  Cookie?
 # GET /lobby - returns lobby js code.
 #       lobby.js shows pending game info and polls server for start
@@ -100,11 +101,16 @@ def MakeHandlerClassFromArgv(game):
     Class Factory to wrap variables in Custom Handler.
     '''
     class ScrambleServer(BaseHTTPServer.BaseHTTPRequestHandler, object):
+
+# POST /game/<gid>/user/<uid>?action=next_puzzle - change user puzzle
+# POST /game/create - make new game
+# POST /game/<gid>/puzzle/<pid> - guess puzzle
+
         def do_GET(self):
             paths = dict()
             paths['puzzle'] = self.puzzle_get
             paths['poll'] = self.poll_get
-            paths['game'] = self.game_get
+            paths['game'] = self.do_GET_game
     
             incoming = urlparse.urlparse(self.path)
             qs = urlparse.parse_qs(incoming.query)
@@ -123,10 +129,148 @@ def MakeHandlerClassFromArgv(game):
                 self._html(path_parts, qs)
             else:
                 self.send_error(500, 'Get not implemented for %s' % incoming.path)
+       
+        #
+        # game API
+        #
+        def do_GET_game_status(self, path_parts, params):
+            gid = path_parts[1]
+
+            # list of each user
+            values = {'timer': 1}
+            users = list()
+            for user in game.users:
+                users.append({'name': user.uid,
+                    'puzzle': user.puzzle.pid})
+            values['users'] = users
+            print 'Status = "%s"' % values
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write('%s' % json.dumps(values))
+            return
+
+# GET /game/<gid> - get game status (json)
+# GET /game/<gid>/user/<uid> - get screen for user
+# GET /game/<gid>/puzzle/<pid>
+
+        def do_GET_game(self, path_parts, params):
+            '''
+            Entry point for all GET endpoints for /game/<gid>
+            '''
+            print 'GAMING IT on %s' % path_parts
+            assert(path_parts[0] == 'game')
+            if len(path_parts) < 2:
+                self.send_error(404, 'Game id is missing')
+                return
+
+            gid = path_parts[1]
+            if gid != game.gid:
+                self.send_error(404, 'Unknown game id %s' % gid)
+                return
+
+            if len(path_parts) == 2:
+                return self.do_GET_game_status(path_parts, params)
+
+            action = path_parts[2]
+            if action == 'user':
+                return self.do_GET_game_user(path_parts, params)
+            elif action == 'puzzle':
+                return self.do_GET_game_puzzle(path_parts, params)
+            else:
+                self.send_error(404)
+            return
+
+        def do_GET_game_puzzle(self, path_parts, params):
+            '''
+            GET endpoint for /game/<gid>/puzzle/<pid>
+            '''
+            if len(path_parts) < 4:
+                self.send_error(404, 'Invalid request for "%s"' %
+                        '/'.join(path_parts))
+                return
+
+            assert(path_parts[2] == 'puzzle')
+            gid = path_parts[1]
+            if gid != game.gid:
+                self.send_error(404, 'Unknown game id %s' % gid)
+                return
+            pid = path_parts[3]
+            try:
+                puzzle = game.get_puzzle(pid)
+            except KeyError:
+                self.send_error(404, 'Unknown puzzle "%s"' % pid)
+                return
+
+            values = {'scramble': puzzle.scramble(),
+                    'state': puzzle.state}
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write('%s' % json.dumps(values))
+            return
+
+        def do_GET_game_user(self, path_parts, params):
+            '''
+            GET endpoint for /game/<gid>/user/<uid>
+            '''
+            if len(path_parts) < 4:
+                self.send_error(404, 'Invalid request for "%s"' %
+                        '/'.join(path_parts))
+                return
+
+            assert(path_parts[2] == 'user')
+            gid = path_parts[1]
+            if gid != game.gid:
+                self.send_error(404, 'Unknown game id %s' % gid)
+                return
+            uid = path_parts[3]
+            try:
+                user = game.get_user(uid)
+            except KeyError:
+                self.send_error(404, 'Unknown userid "%s"' % uid)
+                return
+
+            source_file = 'html/puzzle.html'
+            try:
+                f = open(source_file)
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                for line in f:
+                    if 'LOCAL' in line:
+                        values = {
+                                'pid': user.puzzle.pid,
+                                'uid': user.uid,
+                                'gid': game.gid,
+                                }
+                        if user.puzzle.next_puzzle is not None:
+                            values['next'] = user.puzzle.next_puzzle.pid
+                        else:
+                            values['next'] = None
+                        if user.puzzle.prev_puzzle is not None:
+                            values['previous'] = user.puzzle.prev_puzzle.pid
+                        else:
+                            values['previous'] = None
+
+                        self.wfile.write('var local=%s;\n' % json.dumps(values))
+                        if 'message' in params:
+                            self.wfile.write('var message=%s;\n' % json.dumps(params['message'][0]))
+                    else:
+                        self.wfile.write(line)
+                f.close()
+            except IOError:
+                self.send_error(501, 'failed to load %s' % source_file)
+                return
+            return
     
+        #
+        # POST
+        #
         def do_POST(self):
             paths = dict()
             paths['puzzle'] = self.puzzle_post
+            paths['game'] = self.do_POST_game
     
             incoming = urlparse.urlparse(self.path)
             path_parts = incoming.path.split('/')
@@ -153,38 +297,50 @@ def MakeHandlerClassFromArgv(game):
     
             print 'qs = %s' % qs
             if path_parts[0] in paths:
-                paths[path_parts[0]](path_parts, qs)
+                return paths[path_parts[0]](path_parts, qs)
             else:
                 self.send_error(404, 'Post not implemented for %s' % self.path)
-    
-        #
-        # game API
-        #
-        def _game_status(self, path_parts, params):
-            gid = path_parts[2]
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-
-            # list of each user
-            users = list()
-            for user in game.users:
-                users.append({'name': user.userid,
-                    'puzzle': user.puzzleid})
-            user_string = json.dumps(users)
-            self.wfile.write('%s' % user_string)
             return
 
-        def game_get(self, path_parts, params):
-            print 'GAMING IT on %s' % path_parts
-            if path_parts[1] == 'status':
-                return self._game_status(path_parts, params)
+
+        def do_POST_game(self, path_parts, params):
+            '''
+            Entry point for all POST requests to game endpoints /game/<gid>.
+            '''
+            'POST GAME "%s" + "%s"' % (path_parts, params)
+            assert(path_parts[0] == 'game')
+            # TODO: error check
+            gid = path_parts[1]
+            pid = path_parts[3]
+            uid = params['uid'][0]
+            try:
+                puzzle = game.get_puzzle(pid)
+            except KeyError:
+                self.send_error(404, 'Unknown puzzle "%s"' % pid)
+                return
+
+            keys = sorted([key for key in params.keys() if key.startswith('l')])
+            guess = ''
+            for key in keys:
+                for char in params[key]:
+                    guess += char
+            print 'Guess string = "%s"' % guess
+            print 'correct ?%s' % puzzle.guess(guess)
+            guess_message = 'Guess "%s" is ' % guess
+            if puzzle.guess(guess):
+                puzzle.solve(uid)
+                guess_message += 'correct'
             else:
-                self.send_error(404)
+                guess_message += 'incorrect'
+            # TODO: put gid, uid into params
+            params['message'] = [guess_message]
+            path = ['game', gid, 'user', uid]
+            return self.do_GET_game_user(path, params)
 
         #
         # puzzle API
         #
+
         def puzzle_get(self, path_parts, params):
             '''
             Endpoint for loading puzzles.
@@ -194,20 +350,36 @@ def MakeHandlerClassFromArgv(game):
             print 'Game %s' % game
             assert(path_parts[0] == 'puzzle')
             if len(path_parts) < 2:
-                # TODO send_404(msg)
-                self.send_response(404)
-                self.end_headers()
-                self.wfile.write('Puzzle id is missing')
+                self.send_error(404, 'User id is missing')
                 return
     
-            puzzle_id = path_parts[1]
-            puzzle = game.get_puzzle(puzzle_id)
+            uid = path_parts[1]
+            try:
+                user = game.get_user(uid)
+            except KeyError:
+                self.send_error(404, 'Unknown userid "%s"' % uid)
+                return
+
+            puzzleid = user.puzzle.pid
+            try:
+                puzzle = game.get_puzzle(puzzleid)
+            except KeyError:
+                self.send_error(404, 'Unknown puzzle "%s"' % puzzleid)
+                return
+
             try:
                 f = open('html/puzzle.html')
                 self.send_response(200)
                 self.send_header('Content-type',    'text/html')
                 self.end_headers()
                 for line in f:
+                    # TODO: local =
+                    # puzzleid
+                    # userid
+                    # gameid
+                    # game.get_next(user) # could be None
+                    # game.get_previous(user) # could be None
+                    #
                     if 'LOCAL' in line:
                         # TODO: dump puzzle
                         self.wfile.write('var local=%s;\n' % puzzle.js_object())
@@ -282,6 +454,6 @@ if __name__ == '__main__':
     users = list()
     for i in xrange(2):
         users.append(scramble.user.User('u%d' % i))
-    game = scramble.game.Game(users)
+    game = scramble.game.Game('g1', users)
     HandlerClass = MakeHandlerClassFromArgv(game)
     run(handler_class=HandlerClass)

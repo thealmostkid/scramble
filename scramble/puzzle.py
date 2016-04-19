@@ -17,9 +17,9 @@ def mutate(string):
     return result
 
 class Puzzle(object):
-    def __init__(self, value, nonce):
+    def __init__(self, value, pid):
         self.value = value
-        self.nonce = nonce
+        self.pid = pid
         self.state = None
         self.prev_puzzle = None
         self.next_puzzle = None
@@ -27,18 +27,18 @@ class Puzzle(object):
     def guess(self, submission):
         return self.value == submission
 
-    def solve(self):
-        self.state = 'solved'
+    def solve(self, uid):
+        self.state = 'solved by %s' % uid
 
     def scramble(self):
         return mutate(self.value)
 
     def js_object(self):
-        result = '{pid:"%s",scramble:"%s"' % (self.nonce, self.scramble())
+        result = '{pid:"%s",scramble:"%s"' % (self.pid, self.scramble())
         if self.prev_puzzle is not None:
-            result += ',previous:"%s"' % self.prev_puzzle.nonce
+            result += ',previous:"%s"' % self.prev_puzzle.pid
         if self.next_puzzle is not None:
-            result += ',next:"%s"' % self.next_puzzle.nonce
+            result += ',next:"%s"' % self.next_puzzle.pid
         if self.state is not None:
             result += ',state:"%s"' % self.state
         # TODO: previous, next

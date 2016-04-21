@@ -1,4 +1,5 @@
 import scramble.puzzle
+import time
 # GET /game/gameid returns puzzle.js.  
 # 
 # puzzle.js GET /game/gameid/userid for puzzle id
@@ -32,6 +33,11 @@ class Game(object):
         # all players start game at first puzzle
         for user in users:
             user.puzzle = self.puzzles[0]
+
+        self.start = time.time()
+
+    def timer(self):
+        return int(time.time() - self.start)
 
     def get_puzzle(self, pid):
         return self.puzzles_index[pid]

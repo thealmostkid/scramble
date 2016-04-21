@@ -20,7 +20,8 @@ class Puzzle(object):
     def __init__(self, value, pid):
         self.value = value
         self.pid = pid
-        self.state = None
+        self.solved = False
+        self.message = None
         self.prev_puzzle = None
         self.next_puzzle = None
 
@@ -28,7 +29,8 @@ class Puzzle(object):
         return self.value == submission
 
     def solve(self, uid):
-        self.state = 'solved by %s' % uid
+        self.solved = True
+        self.message = 'solved by %s' % uid
 
     def scramble(self):
         return mutate(self.value)

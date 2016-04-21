@@ -14,7 +14,6 @@
                         (function activity() {
                                 $.getJSON('/game/' + local.gid)
                                 .done(function(data) {
-                                        console.log('activity data = ' + data);
                                      html = '<ul>';
                                      for (i = 0; i < data.users.length; i++) {
                                         html += '<li>';
@@ -40,9 +39,15 @@
                                 $.getJSON('/game/' + local.gid + '/puzzle/' + local.pid)
                                 .done(function(data) {
                                      document.getElementById('scramble').innerHTML = data.scramble;
-                                     if (data.state) {
-                                        document.getElementById('puzzle.state').innerHTML = data.state;
+                                     if (data.message) {
+                                        document.getElementById('puzzle.state').innerHTML = data.message;
                                      }
+                        if (!data.solved) {
+                                document.getElementById("submission").style.visibility = "visible";
+                        } else {
+                                document.getElementById("submission").style.visibility = "hidden";
+                        }
+
                                      setTimeout(puzzle, 1000);
                                         })
                                 .fail(function() {
@@ -52,14 +57,6 @@
                                         }) ;
                                 })();
 
-                        function writePuzzleLink(pid, linkText) {
-                                document.write('<a href="/puzzle/' + pid +
-                                                '?u=' + local.uid +
-                                                '&g=' + local.gid +
-                                                '">');
-                                document.write(linkText);
-                                document.write('</a>');
-                        }
                 </script>
 
         </head>
@@ -85,13 +82,22 @@ if (message !== undefined) {
                 </div>
 
                 <!-- previous puzzle -->
-                <div style="float:left">
+                <div style="float:left" id="prev_puzzle">
+                <script type="text/javascript">
+                    document.write('<form action="/game/' + local.gid + '/user/' + local.uid + '" method="post">');
+                </script>
+                <input type="hidden" name="puzzle" value="prev">
+                <input type="submit" value="Previous Puzzle">
+                </form>
+                </div>
+
                 <script type="text/javascript">
                         if (local.previous != null) {
-                            writePuzzleLink(local.previous, "Previous Puzzle");
+                                document.getElementById("prev_puzzle").style.visibility = "visible";
+                        } else {
+                                document.getElementById("prev_puzzle").style.visibility = "hidden";
                         }
                 </script>
-                </div>
 
                 <!-- scramble -->
                 <div class="puzzle" style="float:center">
@@ -105,33 +111,43 @@ if (message !== undefined) {
                 </div>
 
                 <!-- guess -->
+                <div class="submission" id="submission">
                 <script type="text/javascript">
-                        // TODO: fix this check
-                        if (local.state != "solved") {
                 document.write('<form action="/game/' + local.gid + '/puzzle/' + local.pid + '" method="post">');
-                        document.write('<input type="text" name="l1" maxlength=1 size=1>');
-                        document.write('<input type="text" name="l2" maxlength=1 size=1>');
-                        document.write('<input type="text" name="l3" maxlength=1 size=1>');
-                        document.write('<input type="text" name="l4" maxlength=1 size=1>');
-                        document.write('<input type="text" name="l5" maxlength=1 size=1>');
-                        document.write('<input type="text" name="l6" maxlength=1 size=1>');
-                        document.write('<input type="text" name="l7" maxlength=1 size=1 value="">');
-                                document.write('<input type="hidden" name="uid" value="' + local.uid + '">')
-                        document.write('<br>');
-                        document.write('<input type="submit" value="Submit Guess">');
-                document.write('</form>');
-                        }
                 </script>
+                        <input type="text" name="l1" maxlength=1 size=1>
+                        <input type="text" name="l2" maxlength=1 size=1>
+                        <input type="text" name="l3" maxlength=1 size=1>
+                        <input type="text" name="l4" maxlength=1 size=1>
+                        <input type="text" name="l5" maxlength=1 size=1>
+                        <input type="text" name="l6" maxlength=1 size=1>
+                        <input type="text" name="l7" maxlength=1 size=1>
+                        <script type="text/javascript">
+                        document.write('<input type="hidden" name="uid" value="' + local.uid + '">');
+                </script>
+                        <br>
+                        <input type="submit" value="Submit Guess">
+                </form>
                 </div>
+        </div>
 
                 <!-- next puzzle -->
-                <div style="float:right">
+                <div style="float:right" id="next_puzzle">
                 <script type="text/javascript">
-                        if (local.next != null) {
-                            writePuzzleLink(local.next, "Next Puzzle");
+                    document.write('<form action="/game/' + local.gid + '/user/' + local.uid + '" method="post">');
+                </script>
+                <input type="hidden" name="puzzle" value="next">
+                <input type="submit" value="Next Puzzle">
+                </form>
+                </div>
+
+                <script type="text/javascript">
+                        if (local.next) {
+                                document.getElementById("next_puzzle").style.visibility = "visible";
+                        } else {
+                                document.getElementById("next_puzzle").style.visibility = "hidden";
                         }
                 </script>
-                </div>
 
         </body>
 </html>

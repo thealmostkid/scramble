@@ -5,6 +5,8 @@ import json
 
 import scramble.engine
 
+SERVER_PORT = 8001
+
 # POST /login?user=someone - redirects to lobby.  Cookie?
 # GET /lobby - returns lobby js code.
 #       lobby.js shows pending game info and polls server for start
@@ -98,16 +100,24 @@ def MakeHandlerClassFromArgv(engine):
             print 'qs = %s' % qs
     
             path_parts = incoming.path.split('/')
-            while path_parts[0] == '':
-                path_parts.pop(0)
-    
             print 'PARTS %s' % path_parts
-            if path_parts[0] in paths:
+            print 'LEN = %d' % len(path_parts)
+            while len(path_parts) > 0 and path_parts[0] == '':
+                path_parts.pop(0)
+
+            if len(path_parts) == 0:
+                path = ['login.html']
+                self._html(path, qs)
+                return
+            elif path_parts[0] in paths:
                 paths[path_parts[0]](path_parts, qs)
+                return
             elif incoming.path.endswith('.js'):
                 self.load_js(incoming.path, qs)
+                return
             elif incoming.path.endswith('.html'):
                 self._html(path_parts, qs)
+                return
             else:
                 self.send_error(500, 'Get not implemented for %s' % incoming.path)
                 return
@@ -471,7 +481,7 @@ def MakeHandlerClassFromArgv(engine):
 
 def run(server_class=BaseHTTPServer.HTTPServer,
         handler_class=BaseHTTPServer.BaseHTTPRequestHandler):
-    server_address = ('', 8001)
+    server_address = ('', SERVER_PORT)
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever()
 

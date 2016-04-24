@@ -21,7 +21,7 @@ def gui():
         text='version: %s' % scramble.__version.version)
     ver.grid(column=0, row=0, columnspan=2, sticky='EW')
 
-    url = Tkinter.Label(root, anchor="w", text='The URL is http://127.0.0.1')
+    url = Tkinter.Label(root, anchor="w", text='The URL is http://127.0.0.1:%d/' % scramble.server.SERVER_PORT)
     url.grid(column=0, row=1, columnspan=2, sticky='EW')
     root.mainloop()
 

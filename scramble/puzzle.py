@@ -11,7 +11,6 @@ puzzle:
     left
     right
 '''
-import random
 def mutate(string):
     result = string[2:] + string[0:2]
     return result

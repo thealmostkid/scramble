@@ -1,12 +1,9 @@
 import BaseHTTPServer
 import cgi
 import urlparse
-import random
 import json
 
-import scramble.game
-import scramble.user
-
+import scramble.engine
 
 # POST /login?user=someone - redirects to lobby.  Cookie?
 # GET /lobby - returns lobby js code.
@@ -72,17 +69,6 @@ games = dict()
 #    def change_puzzle(self, userid, direction):
 #        users[userid].change_puzzle(direction)
 
-class Engine(object):
-    def __init__(self):
-        games = dict()
-
-    def get_game(self, gameid):
-        return games[gameid]
-
-    def new_game(self):
-        gid = new_id()
-        games[gid] = Game(gid)
-
 class Lobby(object):
     # TODO: how are conditions specified?
     def create_user(self, userid):
@@ -96,7 +82,7 @@ class Lobby(object):
         else:
             return Game()
 
-def MakeHandlerClassFromArgv(game):
+def MakeHandlerClassFromArgv(engine):
     '''
     Class Factory to wrap variables in Custom Handler.
     '''
@@ -124,12 +110,35 @@ def MakeHandlerClassFromArgv(game):
                 self._html(path_parts, qs)
             else:
                 self.send_error(500, 'Get not implemented for %s' % incoming.path)
-       
+                return
+
+        #
+        # user API
+        #
+        def do_GET_user(self, path_parts, params):
+            assert(path_parts[0] == 'user')
+            uid = path_parts[1]
+            try:
+                user = engine.user(uid)
+            except KeyError:
+                self.send_error(404, 'Cannot find user id %s' % uid)
+                return
+            values = {'name': user.real_name, 'uid': user.uid}
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write('%s' % json.dumps(values))
+            return
+ 
         #
         # game API
         #
         def do_GET_game_status(self, path_parts, params):
             gid = path_parts[1]
+            try:
+                game = engine.game(gid)
+            except KeyError:
+                self.send_error(404, 'Cannot find information for game id %s' % gid)
+                return
 
             # list of each user
             values = {'timer': game.timer()}
@@ -157,7 +166,9 @@ def MakeHandlerClassFromArgv(game):
                 return
 
             gid = path_parts[1]
-            if gid != game.gid:
+            try:
+                game = engine.game(gid)
+            except KeyError:
                 self.send_error(404, 'Unknown game id %s' % gid)
                 return
 
@@ -185,7 +196,9 @@ def MakeHandlerClassFromArgv(game):
 
             assert(path_parts[2] == 'puzzle')
             gid = path_parts[1]
-            if gid != game.gid:
+            try:
+                game = engine.game(gid)
+            except KeyError:
                 self.send_error(404, 'Unknown game id %s' % gid)
                 return
             pid = path_parts[3]
@@ -216,7 +229,9 @@ def MakeHandlerClassFromArgv(game):
 
             assert(path_parts[2] == 'user')
             gid = path_parts[1]
-            if gid != game.gid:
+            try:
+                game = engine.game(gid)
+            except KeyError:
                 self.send_error(404, 'Unknown game id %s' % gid)
                 return
             uid = path_parts[3]
@@ -265,6 +280,7 @@ def MakeHandlerClassFromArgv(game):
         def do_POST(self):
             paths = dict()
             paths['game'] = self.do_POST_game
+            paths['user'] = self.do_POST_user
     
             incoming = urlparse.urlparse(self.path)
             path_parts = incoming.path.split('/')
@@ -295,6 +311,19 @@ def MakeHandlerClassFromArgv(game):
             else:
                 self.send_error(404, 'Post not implemented for %s' % self.path)
             return
+
+# POST /user/create - make a new user
+        def do_POST_user(self, path_parts, params):
+            assert(path_parts[0] == 'user')
+
+            if path_parts[1] == 'create':
+                if 'real-name' not in params:
+                    self.send_error(404, 'real-name missing from create.')
+                    return
+                real_name = params['real-name'][0]
+                user = engine.create_user(real_name)
+                path = ['user', user.uid]
+                return self.do_GET_user(path, params)
 
 # POST /game/create - make new game
 
@@ -340,7 +369,9 @@ def MakeHandlerClassFromArgv(game):
             puzzle_change = params['puzzle'][0]
 
             gid = path_parts[1]
-            if gid != game.gid:
+            try:
+                game = engine.game(gid)
+            except KeyError:
                 self.send_error(404, 'Unknown game id %s' % gid)
                 return
             uid = path_parts[3]
@@ -377,7 +408,11 @@ def MakeHandlerClassFromArgv(game):
                 return
 
             gid = path_parts[1]
-            assert(gid == game.gid)
+            try:
+                game = engine.game(gid)
+            except KeyError:
+                self.send_error(404, 'Unknown game id %s' % gid)
+                return
 
             pid = path_parts[3]
 
@@ -441,9 +476,10 @@ def run(server_class=BaseHTTPServer.HTTPServer,
     httpd.serve_forever()
 
 if __name__ == '__main__':
+    engine = scramble.engine.Engine()
     users = list()
-    for i in xrange(2):
-        users.append(scramble.user.User('u%d' % i))
-    game = scramble.game.Game('g1', users)
-    HandlerClass = MakeHandlerClassFromArgv(game)
+    for i in xrange(scramble.engine.REQUIRED_USER_COUNT):
+        users.append(engine.create_user('faker'))
+    engine.create_game(users)
+    HandlerClass = MakeHandlerClassFromArgv(engine)
     run(handler_class=HandlerClass)

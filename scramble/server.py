@@ -475,7 +475,7 @@ def run(server_class=BaseHTTPServer.HTTPServer,
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever()
 
-if __name__ == '__main__':
+def main():
     engine = scramble.engine.Engine()
     users = list()
     for i in xrange(scramble.engine.REQUIRED_USER_COUNT):
@@ -483,3 +483,6 @@ if __name__ == '__main__':
     engine.create_game(users)
     HandlerClass = MakeHandlerClassFromArgv(engine)
     run(handler_class=HandlerClass)
+
+if __name__ == '__main__':
+    main()

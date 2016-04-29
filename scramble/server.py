@@ -7,82 +7,8 @@ import scramble.engine
 
 SERVER_PORT = 8001
 
-# POST /login?user=someone - redirects to lobby.  Cookie?
-# GET /lobby - returns lobby js code.
-#       lobby.js shows pending game info and polls server for start
-# GET /game/id/user - returns current page for a given game.  polls for updates.
-# PUT /game/id/user?switch=[left|right] - updates state for that user, for the
-# game, and stores metrics
-# Client js code detects when puzzle is solved.  Use simple cipher to
-# obfuscate the puzzle
-
-#
-# puzzle.js(puzzle_url) - reads obfuscated word definition.  how to do final
-# hidden puzzle?
-# lobby.js
-
-# GET /puzzle/puzzle_id - returns word definition
-
-# login.html:
-# form data to post to /login
-
-# POST /login: redirects to /lobby/userid
-# GET /lobby/userid returns lobby.js code for that userid.
-
-# lobby.js:
-# Prints "Hello.  Waiting for the puzzles to start...".  Polls /lobby/userid
-# /lobby/userid returns empty or gameid
-
-# GET /game/gameid returns puzzle.js.  
-# 
-# puzzle.js GET /game/gameid/userid for puzzle id
-# PUT /game/gameid/userid to switch puzzles and update metrics
-# GET /game/gameid/puzzle/puzzle_id for json puzzle representation
-# PUT /game/gameid/puzzle/puzzle_id to solve
-# polls /game/gameid/puzzle/puzzle_id for server-side updates
-# Hidden scrambles are updated server-side and revealed via polling
-# at end of round puzzle_id returns "locked"
 
 # transition screen when game is locked
-
-# POST /login
-# read userid from form data.  Add userid to lobby state.
-# redirect to /lobby/userid
-# GET /lobby/userid returns gameid
-# POST /game/gameid?user=userid returns puzzle.js for the userid
-
-# GET /game/gameid/userid returns json
-
-games = dict()
-
-#class Game(object):
-#    def __init__(self, gameid):
-#        self.puzzles = list()
-#        self.level = 0
-#        self.users = dict()
-#        pass
-#
-#    def add_user(self, userid):
-#        pass
-#
-#    def get_puzzle(self, userid):
-#        return puzzles[users[userid].puzzle_id]
-#
-#    def change_puzzle(self, userid, direction):
-#        users[userid].change_puzzle(direction)
-
-class Lobby(object):
-    # TODO: how are conditions specified?
-    def create_user(self, userid):
-        self.users = dict()
-        pass
-
-    def check_userid(self, userid):
-        # conditions not met
-        if False:
-            return None
-        else:
-            return Game()
 
 def MakeHandlerClassFromArgv(engine):
     '''
@@ -94,6 +20,8 @@ def MakeHandlerClassFromArgv(engine):
             paths = dict()
             paths['poll'] = self.poll_get
             paths['game'] = self.do_GET_game
+            paths['lobby'] = self.do_GET_lobby
+            paths['user'] = self.do_GET_user
     
             incoming = urlparse.urlparse(self.path)
             qs = urlparse.parse_qs(incoming.query)
@@ -118,9 +46,42 @@ def MakeHandlerClassFromArgv(engine):
             elif incoming.path.endswith('.html'):
                 self._html(path_parts, qs)
                 return
+            elif incoming.path.endswith('.css'):
+                self._css(path_parts, qs)
+                return
             else:
                 self.send_error(500, 'Get not implemented for %s' % incoming.path)
                 return
+
+        #
+        # lobby API
+        #
+        def do_GET_lobby(self, path_parts, params):
+            assert(path_parts[0] == 'lobby')
+            uid = path_parts[1]
+            try:
+                user = engine.user(uid)
+            except KeyError:
+                self.send_error(404, 'Cannot find user id %s' % uid)
+                return
+
+            source_file = 'html/lobby.html'
+            try:
+                f = open(source_file)
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                for line in f:
+                    if 'LOCAL' in line:
+                        values = {'uid': user.uid}
+                        self.wfile.write('var local=%s;\n' % json.dumps(values))
+                    else:
+                        self.wfile.write(line)
+                f.close()
+            except IOError:
+                self.send_error(501, 'failed to load %s' % source_file)
+                return
+            return
 
         #
         # user API
@@ -131,11 +92,16 @@ def MakeHandlerClassFromArgv(engine):
             try:
                 user = engine.user(uid)
             except KeyError:
-                self.send_error(404, 'Cannot find user id %s' % uid)
+                self.send_error(404, 'Cannot find user id "%s"' % uid)
                 return
-            values = {'name': user.real_name, 'uid': user.uid}
+            self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
+            values = {'name': user.real_name, 'uid': user.uid}
+            if user.game is not None:
+                values['gid'] = user.game.gid
+            else:
+                values['gid'] = None
             self.wfile.write('%s' % json.dumps(values))
             return
  
@@ -332,8 +298,9 @@ def MakeHandlerClassFromArgv(engine):
                     return
                 real_name = params['real-name'][0]
                 user = engine.create_user(real_name)
-                path = ['user', user.uid]
-                return self.do_GET_user(path, params)
+                engine.poll_for_new_game()
+                path = ['lobby', user.uid]
+                return self.do_GET_lobby(path, params)
 
 # POST /game/create - make new game
 
@@ -477,6 +444,15 @@ def MakeHandlerClassFromArgv(engine):
             f.close()
             return
 
+        def _css(self, path_parts, params):
+            f = open('html/%s' % path_parts[-1])
+            self.send_response(200)
+            self.send_header('Content-type', 'text/css')
+            self.end_headers()
+            self.wfile.write(f.read())
+            f.close()
+            return
+
     return ScrambleServer
 
 def run(server_class=BaseHTTPServer.HTTPServer,
@@ -487,10 +463,9 @@ def run(server_class=BaseHTTPServer.HTTPServer,
 
 def main():
     engine = scramble.engine.Engine()
-    users = list()
     for i in xrange(scramble.engine.REQUIRED_USER_COUNT):
-        users.append(engine.create_user('faker'))
-    engine.create_game(users)
+        engine.create_user('faker')
+    engine.poll_for_new_game()
     HandlerClass = MakeHandlerClassFromArgv(engine)
     run(handler_class=HandlerClass)
 

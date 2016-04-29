@@ -171,8 +171,16 @@ class Engine(object):
     def create_user(self, real_name):
         uid = '%s-%s' % (adjectives[random.randint(0, len(adjectives) - 1)],
                 names[random.randint(0, len(names) - 1)])
-        self.users[uid] = scramble.user.User(uid, real_name)
-        return self.users[uid]
+        user = scramble.user.User(uid, real_name)
+        self.users[uid] = user
+        return user
+
+    def poll_for_new_game(self):
+        pending_users = [user for (uid, user) in self.users.items() if
+                user.game is None]
+        if len(pending_users) >= REQUIRED_USER_COUNT:
+            self.create_game(pending_users[0:REQUIRED_USER_COUNT])
+            self.poll_for_new_game()
 
     def game(self, gid):
         return self.games[gid]
@@ -192,14 +200,17 @@ class Engine(object):
                     (len(user_list), REQUIRED_USER_COUNT))
 
         for user in user_list:
-            if user.gid is not None:
+            if user.game is not None:
                 raise ValueError('User %s already in game %s' % (user.uid,
-                    user.gid))
+                    user.game.gid))
 
         indx = 0
         while '%s%d' % (GID_PREFIX, indx) in self.games:
             indx += 1
 
         gid = '%s%d' % (GID_PREFIX, indx)
-        self.games[gid] = scramble.game.Game(gid, user_list)
-        return self.games[gid]
+        game = scramble.game.Game(gid, user_list)
+        self.games[gid] = game
+        for user in user_list:
+            user.game = game
+        return game

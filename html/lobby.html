@@ -1,0 +1,44 @@
+<html>
+        <head>
+                <link rel="stylesheet" type="text/css" href="/sample.css">
+                <script type="text/javascript" src="/jquery-1.12.2.min.js"></script>
+                 <script type="text/javascript">
+                         LOCAL
+
+                        // reload user state
+                        (function user() {
+                                $.getJSON('/user/' + local.uid)
+                                .done(function(data) {
+                                        user_html = '<h3>Welcome ' + data.name + '!</h3>' +
+                                        '<p>Your user name for this game is "' + data.uid + '".  Please remember it.';
+
+                                        document.getElementById('user').innerHTML = user_html;
+                                        if (data.gid) {
+                                        game_html = "<form action='/game/" + data.gid + "/user/" + local.uid + "' method='get'>" +
+                                        "<input type='submit' value='Start Game'>" +
+                                        "</form>";
+                                        } else {
+                                        game_html = '<p>Waiting for game to start...</p>';
+                                        }
+                                        document.getElementById('game').innerHTML = game_html;
+
+                                     setTimeout(user, 1000);
+                                        })
+                                .fail(function() {
+                                     document.getElementById('user').innerHTML = "<font color=red>Error Loading User Data</font>";
+                                        })
+                                .always(function() {
+                                        }) ;
+                                })();
+
+                </script>
+
+        </head>
+        <body>
+                <div id='user'>Loading...</div>
+                <!-- activity -->
+                <div id="game" style="border:1px solid black;">
+                        Loading...
+                </div>
+        </body>
+</html>

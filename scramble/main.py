@@ -1,8 +1,6 @@
-#from tkinter import *
-#from tkinter import ttk
-
 import scramble.server
 import scramble.__version
+import socket
 import threading
 import Tkinter
 
@@ -21,7 +19,12 @@ def gui():
         text='version: %s' % scramble.__version.version)
     ver.grid(column=0, row=0, columnspan=2, sticky='EW')
 
-    url = Tkinter.Label(root, anchor="w", text='The URL is http://127.0.0.1:%d/' % scramble.server.SERVER_PORT)
+    host_name = socket.getfqdn()
+    ip_addr = socket.gethostbyname(host_name)
+    url = Tkinter.Label(root, anchor="w",
+            text='The URL is http://%s:%d/\nor http://%s:%d/' % (host_name,
+                scramble.server.SERVER_PORT, ip_addr,
+                scramble.server.SERVER_PORT))
     url.grid(column=0, row=1, columnspan=2, sticky='EW')
     root.mainloop()
 

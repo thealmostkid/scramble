@@ -1,0 +1,40 @@
+html, body{
+	margin: 0;
+	padding: 0;
+	height: 100%; 
+  background: #414141;
+}
+
+body{
+	font-family: arial, sans-serif;
+	font-size: 1.5em;
+}
+
+
+#wrapper {
+  width: 75%;
+  margin: 20px auto;
+}
+
+input[type=text]{
+  width: 40px;
+  height: 30px;
+  padding: 5px;
+  background: white;
+  border-style: solid;
+  border-color: #222;  
+  border-width: 0 0 2px 2px;
+  color: #333;
+  text-align: center;
+  display: inline-block;
+  margin-right: 2px;
+  font-weight: bold;
+  font-family: arial, sans-serif;
+  font-size: 1.5em;
+}
+
+input[type=text]:focus{
+  box-shadow: 0px 0px 5px skyblue;
+  border: 1px solid black;
+  color: black;
+}

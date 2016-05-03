@@ -1,153 +1,237 @@
+<!doctype html>
 <html>
-        <head>
-                <link rel="stylesheet" type="text/css" href="/sample.css">
-                <script type="text/javascript" src="/jquery-1.12.2.min.js"></script>
-                 <script type="text/javascript">
-                         var user = undefined;
-                         var message = undefined;
-                         var ignored = {gid:"g1",
-                                 uid:"u0",
-                                 pid:3,
-                                 previous:2,
-                                 scramble:"ijklmop"};
-                         LOCAL
-                        (function activity() {
-                                $.getJSON('/game/' + local.gid)
-                                .done(function(data) {
-                                     html = '<ul>';
-                                     for (i = 0; i < data.users.length; i++) {
-                                        html += '<li>';
-                                        html += 'User "' + data.users[i].name + '" ';
-                                        html += 'Puzzle "' + data.users[i].puzzle + '"';
-                                        html += '</li>';
-                                     }
-                                     html += '</ul>';
-                                     html += 'Time = ' + data.timer;
-                                     document.getElementById('activity').innerHTML = "<p>" + html + "</p>";
-                                     setTimeout(activity, 1000);
-                                        })
-                                .fail(function() {
-                                     document.getElementById('activity').innerHTML = "<p>Error</p>";
-                                        })
-                                .always(function() {
-                                        }) ;
-                                })();
+<head>
+<meta charset="UTF-8">
+<title>JUMBLE</title>
+<link href="/jumble.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="/jquery-1.12.2.min.js"></script>
+<script type="text/javascript">
+	var user = undefined;
+	var message = undefined;
+	LOCAL
+
+	(function activity() {
+		$.getJSON('/game/' + local.gid)
+		.done(function(data) {
+			html = '<ul>';
+			for (i = 0; i < data.users.length; i++) {
+				html += '<li>';
+				html += 'User "' + data.users[i].name + '" ';
+                                html += 'Puzzle "' + data.users[i].puzzle + '"';
+                                html += '</li>';
+                        }
+			html += '</ul>';
+			//document.getElementById('activity').innerHTML = "<p>" + html + "</p>";
+			document.getElementById('game.time').innerHTML = "Time: " + data.timer;
+			setTimeout(activity, 1000);
+		})
+		.fail(function() {
+			document.getElementById('activity').innerHTML = "<p>Error</p>";
+		})
+		.always(function() {
+		});
+	})();
 
 
-                        // reload puzzle state
-                        (function puzzle() {
-                                $.getJSON('/game/' + local.gid + '/puzzle/' + local.pid)
-                                .done(function(data) {
-                                     document.getElementById('scramble').innerHTML = data.scramble;
-                                     if (data.message) {
-                                        document.getElementById('puzzle.state').innerHTML = data.message;
-                                     }
+	// reload puzzle state
+	(function puzzle() {
+		$.getJSON('/game/' + local.gid + '/puzzle/' + local.pid)
+		.done(function(data) {
+			scramble_html = '';
+			guess_html = '';
+			for (i = 0; i < data.scramble.length; i++) {
+				scramble_html += '<section>';
+				scramble_html += data.scramble.charAt(i);
+				scramble_html += '</section>';
+
+				guess_html += '<input type="text"';
+				if (i == 2) {
+					guess_html += ' id="highlight"'
+				}
+				guess_html += ' name="l' + i + '"';
+				guess_html += ' maxlength=1 size=1>';
+			}
+			document.getElementById('game.scramble').innerHTML = scramble_html;
+			document.getElementById('game.guess').innerHTML = guess_html;
+
+			if (data.message) {
+				document.getElementById('puzzle.state').innerHTML = data.message;
+			}
                         if (!data.solved) {
-                                document.getElementById("submission").style.visibility = "visible";
+                                document.getElementById("game.guess").style.visibility = "visible";
                         } else {
-                                document.getElementById("submission").style.visibility = "hidden";
+                                document.getElementById("game.guess").style.visibility = "hidden";
                         }
+			setTimeout(puzzle, 1000);
+		})
+		.fail(function() {
+			document.getElementById('scramble').innerHTML = "<font color=red>Error Loading Puzzle</font>";
+		})
+		.always(function() {
+		}) ;
+	})();
 
-                                     setTimeout(puzzle, 1000);
-                                        })
-                                .fail(function() {
-                                     document.getElementById('scramble').innerHTML = "<font color=red>Error Loading Puzzle</font>";
-                                        })
-                                .always(function() {
-                                        }) ;
-                                })();
-
-                </script>
-
-        </head>
-        <body>
-                <h1>
-                Puzzle <script type="text/javascript">
-                        document.write(local.pid)
-        if (local.state) {
-                document.write('(' + local.state + ')')
-        }
-                </script>
-                <div id='puzzle.state'></div>
-                </h1>
-                <script type="text/javascript">
-if (message !== undefined) {
-        document.write('<p><font color="red"><i>' + message + '</i></font></p>');
-}
 </script>
-                <!-- activity -->
-                <div class="activity" id="activity"
-                        style="border:1px solid black;">
-                        Loading...
-                </div>
+</head>
 
-                <!-- previous puzzle -->
-                <div style="float:left" id="prev_puzzle">
-                <script type="text/javascript">
-                    document.write('<form action="/game/' + local.gid + '/user/' + local.uid + '" method="post">');
-                </script>
-                <input type="hidden" name="puzzle" value="prev">
-                <input type="submit" value="Previous Puzzle">
-                </form>
-                </div>
+<body>
 
-                <script type="text/javascript">
-                        if (local.previous != null) {
-                                document.getElementById("prev_puzzle").style.visibility = "visible";
-                        } else {
-                                document.getElementById("prev_puzzle").style.visibility = "hidden";
-                        }
-                </script>
 
-                <!-- scramble -->
-                <div class="puzzle" style="float:center">
-                        <div class="scramble">
-                                <p><b>Scramble = &quot;
-                                        <div id="scramble">
-                                                ...
-                                        </div>
-                        &quot;
-                </b></p>
-                </div>
+<div id=wrapper>
+<table> 
 
-                <!-- guess -->
-                <div class="wrapper" id="submission">
-                <script type="text/javascript">
-                document.write('<form action="/game/' + local.gid + '/puzzle/' + local.pid + '" method="post">');
-                </script>
-                        <input type="text" name="l1" maxlength=1 size=1>
-                        <input type="text" name="l2" maxlength=1 size=1>
-                        <input type="text" name="l3" maxlength=1 size=1>
-                        <input type="text" name="l4" maxlength=1 size=1>
-                        <input type="text" name="l5" maxlength=1 size=1>
-                        <input type="text" name="l6" maxlength=1 size=1>
-                        <input type="text" name="l7" maxlength=1 size=1>
-                        <script type="text/javascript">
-                        document.write('<input type="hidden" name="uid" value="' + local.uid + '">');
-                </script>
-                        <br>
-                        <input type="submit" value="Submit Guess">
-                </form>
-                </div>
-        </div>
+	<!-- timer -->
 
-                <!-- next puzzle -->
-                <div style="float:right" id="next_puzzle">
-                <script type="text/javascript">
-                    document.write('<form action="/game/' + local.gid + '/user/' + local.uid + '" method="post">');
-                </script>
-                <input type="hidden" name="puzzle" value="next">
-                <input type="submit" value="Next Puzzle">
-                </form>
-                </div>
+    <div id=wrapper>
+    <tr>
+      <td> </td>
+      <td align=center id="game.time">Time remaining: -</td>
+      <td></td>
+    </tr>
+    </div>
+    
+    <!-- spacing between timer and previous and next buttons -->
+    <div id=wrapper>
+    <tr >
+      <td height=30></td>
+    </tr>
+    </div>
 
-                <script type="text/javascript">
-                        if (local.next) {
-                                document.getElementById("next_puzzle").style.visibility = "visible";
-                        } else {
-                                document.getElementById("next_puzzle").style.visibility = "hidden";
-                        }
-                </script>
+	<!-- previous and next buttons -->
 
-        </body>
+    <div id=wrapper>
+    <tr>
+      <td align=center id="prev_puzzle">
+        <script type="text/javascript">
+	  html = '<form action="/game/'
+	  html += local.gid
+	  html += '/user/'
+	  html += local.uid
+	  html += '" method="post">';
+	  document.write(html);
+        </script>
+        <input type="hidden" name="puzzle" value="prev">
+        <input type="submit" value="previous">
+        </form>
+      </td>
+      <td> </td>
+      <td align=center id="next_puzzle">
+        <script type="text/javascript">
+	  html = '<form action="/game/'
+	  html += local.gid
+	  html += '/user/'
+	  html += local.uid
+	  html += '" method="post">';
+	  document.write(html);
+        </script>
+        <input type="hidden" name="puzzle" value="next">
+        <input type="submit" value="next">
+        </form>
+
+      </td>
+    </tr>
+    </div>
+
+    <!-- spacing between buttons and jumble -->
+    <div id=wrapper>
+    <tr >
+      <td height=20></td>
+    </tr>
+    </div>
+    
+	<!-- jumble display -->
+	<div id=wrapper>
+    <tr>
+    	<script type="text/javascript">
+        	html = "<td align=center><h3>Puzzle ";
+		html += local.pid;
+		html += ": </h3></td>";
+		document.write(html)
+	</script>
+      	<td id="game.scramble">
+	  <section>n</section>
+          <section>h</section>
+          <section>d</section>
+          <section>i</section>
+          <section id=highlight>d</section>
+          <section>e</section>
+	</td>
+        <td></td>
+    </tr>
+    
+    </div>
+    
+    <!-- spacing between puzzle and solution input -->
+    <div id=wrapper>
+    <tr >
+      <td height=10></td>
+    </tr>
+    </div>
+    
+    <!-- solution display -->
+    
+    <div id=wrapper>
+
+    <script type="text/javascript">
+    	document.write('<form action="/game/' + local.gid + '/puzzle/' + local.pid + '" method="post">');
+    </script>
+    <tr>
+        <td align=center><h3>Your Guess:</h3></td>
+        <td align=center id="game.guess"><font color=green><h2>SOLVED</h2></font></td>  
+
+<!--        
+      	<td><input type="text" maxlength=1 value=h>
+        	  <input type="text" maxlength=1 value=i>
+        	  <input type="text" maxlength=1 value=d>              
+        	  <input type="text" maxlength=1 value=e>
+              <input type="text" maxlength=1 value=n>
+        	  <input type="text" maxlength=1 value=d></td>
+    	<td align=center><input type=submit value=submit></center> </td> --> 
+    </tr>
+    <input type="submit" value="Submit Guess">
+    <script type="text/javascript">
+	document.write('<input type="hidden" name="uid" value="' + local.uid + '">');
+    </script>
+    </form>
+    <br>
+    </div>
+
+    <!-- spacing between guess and statues -->
+    <div id=wrapper>
+    <tr >
+      <td height=40></td>
+    </tr>
+    </div>
+
+    <!-- status display -->
+    <div id=wrapper>
+    <tr >
+      <td>Player 1 working on puzzle #</td>
+    </tr>
+    </div>
+
+    <!-- status display -->
+    <div id=wrapper>
+    <tr >
+      <td>Player 2 working on puzzle #</td>
+    </tr>
+    </div>
+    
+</table>
+
+<script type="text/javascript">
+        if (local.previous != null) {
+                document.getElementById("prev_puzzle").style.visibility = "visible";
+        } else {
+                document.getElementById("prev_puzzle").style.visibility = "hidden";
+        }
+	if (local.next) {
+		document.getElementById("next_puzzle").style.visibility = "visible";
+	} else {
+		document.getElementById("next_puzzle").style.visibility = "hidden";
+	}
+</script>
+
+
+</body>
 </html>

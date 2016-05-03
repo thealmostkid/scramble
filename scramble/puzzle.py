@@ -32,11 +32,11 @@ def parse(lines):
         elif parts[0] == 'puzzle':
             if len(parts) < 3:
                 raise ValueError('No scramble specified: "%s"' % line)
+            puzzle = [parts[1], parts[2]]
             if len(parts) > 3:
                 # raises ValueError if not an integer
                 indices = [int(index) for index in parts[3].split(',')]
                 puzzle.append(indices)
-            puzzle = [parts[1], parts[2]]
 
             current_round.append(puzzle)
         # mystery
@@ -139,11 +139,11 @@ def mutate(string):
     return result
 
 class Puzzle(object):
-    def __init__(self, pid, value, scramble, None):
+    def __init__(self, pid, value, scramble):
         self.pid = pid
         self.value = value
         self.scramble = scramble
-        self.indices = indices
+
         self.solved = False
         self.message = None
         self.prev_puzzle = None
@@ -155,9 +155,6 @@ class Puzzle(object):
     def solve(self, uid):
         self.solved = True
         self.message = 'solved by %s' % uid
-
-    def scramble(self):
-        return self.scramble
 
     def js_object(self):
         result = '{pid:"%s",scramble:"%s"' % (self.pid, self.scramble())

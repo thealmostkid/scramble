@@ -123,7 +123,6 @@ def MakeHandlerClassFromArgv(engine):
                 users.append({'name': user.uid,
                     'puzzle': user.puzzle.pid})
             values['users'] = users
-            print 'Status = "%s"' % values
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -135,7 +134,6 @@ def MakeHandlerClassFromArgv(engine):
             '''
             Entry point for all GET endpoints for /game/<gid>
             '''
-            print 'GAMING IT on %s' % path_parts
             assert(path_parts[0] == 'game')
             if len(path_parts) < 2:
                 self.send_error(404, 'Game id is missing')
@@ -184,7 +182,7 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown puzzle "%s"' % pid)
                 return
 
-            values = {'scramble': puzzle.scramble(),
+            values = {'scramble': puzzle.scramble,
                     'solved': puzzle.solved,
                     'message': puzzle.message}
             self.send_response(200)
@@ -263,17 +261,12 @@ def MakeHandlerClassFromArgv(engine):
             while path_parts[0] == '':
                 path_parts.pop(0)
     
-            print "======= POST STARTED ======="
-            print self.headers
             form = cgi.FieldStorage(
                     fp=self.rfile,
                     headers=self.headers,
                     environ={'REQUEST_METHOD':'POST',
                         'CONTENT_TYPE':self.headers['Content-Type'],
                         })
-            print "======= POST VALUES ======="
-            for item in form.list:
-                print '%s\n' % item
             qs = dict()
             for key in form.keys():
                 value = form.getvalue(key)
@@ -281,7 +274,6 @@ def MakeHandlerClassFromArgv(engine):
                     value = [value]
                 qs[key] = value
     
-            print 'qs = %s' % qs
             if path_parts[0] in paths:
                 return paths[path_parts[0]](path_parts, qs)
             else:
@@ -404,8 +396,6 @@ def MakeHandlerClassFromArgv(engine):
             for key in keys:
                 for char in params[key]:
                     guess += char
-            print 'Guess string = "%s"' % guess
-            print 'correct ?%s' % puzzle.guess(guess)
             guess_message = 'Guess "%s" is ' % guess
 
             uid = params['uid'][0]

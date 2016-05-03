@@ -19,20 +19,44 @@ class Game(object):
         for user in self.users:
             self.users_index[user.uid] = user
 
-        # TODO: load from puzzle database
-        self.puzzles = list()
+        # load puzzle database
+        self.group = 0
+        puzzle_database = scramble.puzzle.parse(
+                scramble.puzzle.DEFAULT.split('\n'))
+        self.groups = list()
+        for g in xrange(len(puzzle_database)):
+            puzzles = list()
+            group = puzzle_database[g]
+            mystery_scramble = ''
+            for p in xrange(len(group) - 1):
+                parts = group[p]
+                puzzle = scramble.puzzle.Puzzle('r%dp%d' % (g, p),
+                        parts[0], parts[1])
+                if len(parts) > 2:
+                    for index in parts[2]:
+                        mystery_scramble += puzzle.value[index - 1]
+                if p > 0:
+                    puzzle.prev_puzzle = puzzles[-1]
+                    puzzle.prev_puzzle.next_puzzle = puzzle
+                puzzles.append(puzzle)
+
+            # special mystery puzzle
+            mystery = scramble.puzzle.Puzzle('r%dm' % g, group[-1][0],
+                    mystery_scramble)
+            mystery.prev_puzzle = puzzles[-1]
+            mystery.prev_puzzle.next_puzzle = mystery
+            puzzles.append(mystery)
+
+            self.groups.append(puzzles)
+
         self.puzzles_index = dict()
-        for i in xrange(3):
-            puzzle = scramble.puzzle.Puzzle('jeremy%d' % i, str(i))
-            if i > 0:
-                puzzle.prev_puzzle = self.puzzles[i - 1]
-                puzzle.prev_puzzle.next_puzzle = puzzle
-            self.puzzles.append(puzzle)
-            self.puzzles_index[puzzle.pid] = puzzle
+        for group in self.groups:
+            for puzzle in group:
+                self.puzzles_index[puzzle.pid] = puzzle
 
         # all players start game at first puzzle
         for user in users:
-            user.puzzle = self.puzzles[0]
+            user.puzzle = self.groups[self.group][0]
 
         self.start = time.time()
 
@@ -43,5 +67,4 @@ class Game(object):
         return self.puzzles_index[pid]
 
     def get_user(self, uid):
-        print 'looking for %s in %s' % (uid, self.users_index)
         return self.users_index[uid]

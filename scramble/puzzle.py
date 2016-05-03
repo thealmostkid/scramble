@@ -12,7 +12,6 @@ puzzle STYLE TESYL
 puzzle MELODY DYLOME
 mystery AIRWAY'''
 
-
 def parse(lines):
     rounds = list()
     current_round = None
@@ -29,27 +28,23 @@ def parse(lines):
                     raise ValueError('No puzzles specified for the round')
                 rounds.append(current_round)
             current_round = list()
-
         # puzzle
         elif parts[0] == 'puzzle':
             if len(parts) < 3:
                 raise ValueError('No scramble specified: "%s"' % line)
-            puzzle = [parts[1], parts[2]]
             if len(parts) > 3:
                 # raises ValueError if not an integer
                 indices = [int(index) for index in parts[3].split(',')]
                 puzzle.append(indices)
+            puzzle = [parts[1], parts[2]]
 
             current_round.append(puzzle)
-
         # mystery
         elif parts[0] == 'mystery':
             current_round.append([parts[1]])
-
         # failure
         else:
             raise ValueError('Unknown input: "%s"' % line)
-
 
     if current_round is None:
         raise ValueError('"round" not specified')
@@ -144,9 +139,11 @@ def mutate(string):
     return result
 
 class Puzzle(object):
-    def __init__(self, value, pid):
-        self.value = value
+    def __init__(self, pid, value, scramble, None):
         self.pid = pid
+        self.value = value
+        self.scramble = scramble
+        self.indices = indices
         self.solved = False
         self.message = None
         self.prev_puzzle = None
@@ -160,7 +157,7 @@ class Puzzle(object):
         self.message = 'solved by %s' % uid
 
     def scramble(self):
-        return mutate(self.value)
+        return self.scramble
 
     def js_object(self):
         result = '{pid:"%s",scramble:"%s"' % (self.pid, self.scramble())

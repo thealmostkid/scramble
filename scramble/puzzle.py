@@ -151,7 +151,7 @@ class Puzzle(object):
         self.next_puzzle = None
 
     def guess(self, submission):
-        return self.value == submission
+        return self.value.lower() == submission.lower()
 
     def solve(self, uid):
         self.solved = True

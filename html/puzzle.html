@@ -13,12 +13,13 @@
 	(function activity() {
 		$.getJSON('/game/' + local.gid)
 		.done(function(data) {
-			status_html = '';
+            status_html = '<table>';
 			for (i = 0; i < data.users.length; i++) {
                 status_html += '<tr><td>';
                 status_html += 'Player <b>' + data.users[i].name + '</b> working on puzzle <i>' + data.users[i].puzzle + '</i>';
                 status_html += '</td></tr>';
             }
+            status_html += '</table>';
 			document.getElementById('game.status').innerHTML = status_html;
 
 			document.getElementById('game.time').innerHTML = "Time remaining: " + data.timer;

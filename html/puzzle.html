@@ -167,12 +167,14 @@
         document.write('<form action="/game/' + local.gid + '/puzzle/' + local.pid + '" method="post">');
         guess_html = '';
         for (i = 0; i < local.puzzle_len; i++) {
-				guess_html += '<input type="text"';
-				if (i == 2) {
-					guess_html += ' id="highlight"'
-				}
-				guess_html += ' name="l' + i + '"';
-				guess_html += ' maxlength=1 size=1>';
+                guess_html += '<input type="text"';
+                for (j = 0; j < local.puzzle_indices.length; j++) {
+                        if (i == local.puzzle_indices[j]) {
+                                guess_html += ' id="highlight"';
+                        }
+                }
+                guess_html += ' name="l' + i + '"';
+                guess_html += ' maxlength=1 size=1>';
         }
         document.write(guess_html);
         document.write('<input type="hidden" name="uid" value="' + local.uid + '">');

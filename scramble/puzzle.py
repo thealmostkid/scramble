@@ -143,7 +143,7 @@ class Puzzle(object):
         self.pid = pid
         self.value = value
         self.scramble = scramble
-        # TODO: self.indices for highlighting
+        self.indices = list()
 
         self.solved = False
         self.message = None

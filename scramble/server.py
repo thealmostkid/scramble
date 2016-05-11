@@ -228,6 +228,7 @@ def MakeHandlerClassFromArgv(engine):
                                 'uid': user.uid,
                                 'gid': game.gid,
                                 'puzzle_len': len(user.puzzle.scramble),
+                                'puzzle_indices': user.puzzle.indices
                                 }
                         if user.puzzle.next_puzzle is not None:
                             values['next'] = user.puzzle.next_puzzle.pid

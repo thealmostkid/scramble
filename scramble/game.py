@@ -27,7 +27,6 @@ class Game(object):
         for g in xrange(len(puzzle_database)):
             puzzles = list()
             group = puzzle_database[g]
-            mystery_scramble = ''
             for p in xrange(len(group) - 1):
                 parts = group[p]
                 puzzle = scramble.puzzle.Puzzle('r%dp%d' % (g, p),
@@ -35,17 +34,13 @@ class Game(object):
                 # set indices
                 if len(parts) > 2:
                     puzzle.indices = parts[2]
-                    for index in parts[2]:
-                        # TODO: this is dynamic based on other solutions
-                        mystery_scramble += puzzle.value[index - 1]
                 if p > 0:
                     puzzle.prev_puzzle = puzzles[-1]
                     puzzle.prev_puzzle.next_puzzle = puzzle
                 puzzles.append(puzzle)
 
             # special mystery puzzle
-            mystery = scramble.puzzle.Puzzle('r%dm' % g, group[-1][0],
-                    mystery_scramble)
+            mystery = scramble.puzzle.Puzzle('r%dm' % g, group[-1][0], '')
             mystery.prev_puzzle = puzzles[-1]
             mystery.prev_puzzle.next_puzzle = mystery
             puzzles.append(mystery)
@@ -71,3 +66,12 @@ class Game(object):
 
     def get_user(self, uid):
         return self.users_index[uid]
+
+    def solve(self, pid, uid):
+        puzzle = self.get_puzzle(pid)
+        puzzle.solve(uid)
+        # TODO: dynamic based on round
+        mystery = self.get_puzzle('r0m')
+        for index in puzzle.indices:
+            mystery.scramble += puzzle.value[index - 1]
+

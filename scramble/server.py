@@ -227,7 +227,7 @@ def MakeHandlerClassFromArgv(engine):
                                 'pid': user.puzzle.pid,
                                 'uid': user.uid,
                                 'gid': game.gid,
-                                'puzzle_len': len(user.puzzle.scramble),
+                                'puzzle_len': len(user.puzzle.value),
                                 'puzzle_indices': user.puzzle.indices
                                 }
                         if user.puzzle.next_puzzle is not None:
@@ -402,7 +402,7 @@ def MakeHandlerClassFromArgv(engine):
 
             uid = params['uid'][0]
             if puzzle.guess(guess):
-                puzzle.solve(uid)
+                game.solve(pid, uid)
                 guess_message += 'correct'
             else:
                 guess_message += 'incorrect'

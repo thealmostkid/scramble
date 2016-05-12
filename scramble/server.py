@@ -121,6 +121,7 @@ def MakeHandlerClassFromArgv(engine):
             users = list()
             for user in game.users:
                 users.append({'name': user.uid,
+                    'mystery': user.mystery_solver,
                     'puzzle': user.puzzle.pid})
             values['users'] = users
             self.send_response(200)
@@ -152,8 +153,6 @@ def MakeHandlerClassFromArgv(engine):
             action = path_parts[2]
             if action == 'user':
                 return self.do_GET_game_user(path_parts, params)
-            elif action == 'puzzle':
-                return self.do_GET_game_puzzle(path_parts, params)
             else:
                 self.send_error(404)
             return
@@ -161,21 +160,27 @@ def MakeHandlerClassFromArgv(engine):
 # GET /game/<gid>/puzzle/<pid>
         def do_GET_game_puzzle(self, path_parts, params):
             '''
-            GET endpoint for /game/<gid>/puzzle/<pid>
+            GET endpoint for /game/<gid>/user/<uid>/puzzle/<pid>
             '''
-            if len(path_parts) < 4:
-                self.send_error(404, 'Invalid request for "%s"' %
-                        '/'.join(path_parts))
+            if len(path_parts) < 6:
+                self.send_error(404, 'Invalid request for "%s"' % '/'.join(path_parts))
                 return
 
-            assert(path_parts[2] == 'puzzle')
+            assert(path_parts[4] == 'puzzle')
             gid = path_parts[1]
             try:
                 game = engine.game(gid)
             except KeyError:
                 self.send_error(404, 'Unknown game id %s' % gid)
                 return
-            pid = path_parts[3]
+            uid = path_parts[3]
+            try:
+                user = game.get_user(uid)
+            except KeyError:
+                self.send_error(404, 'Unknown userid "%s"' % uid)
+                return
+
+            pid = path_parts[5]
             try:
                 puzzle = game.get_puzzle(pid)
             except KeyError:
@@ -184,6 +189,7 @@ def MakeHandlerClassFromArgv(engine):
 
             values = {'scramble': puzzle.scramble,
                     'solved': puzzle.solved,
+                    'hidden': (puzzle.pid == 'r0m' and not user.mystery_solver),
                     'message': puzzle.message}
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -202,6 +208,15 @@ def MakeHandlerClassFromArgv(engine):
                 return
 
             assert(path_parts[2] == 'user')
+            if len(path_parts) > 4:
+                action = path_parts[4]
+                if action == 'puzzle':
+                    return self.do_GET_game_puzzle(path_parts, params)
+                else:
+                    self.send_error(404, 'Invalid action "%s"' %
+                            '/'.join(path_parts))
+                    return
+
             gid = path_parts[1]
             try:
                 game = engine.game(gid)

@@ -11,6 +11,10 @@ import time
 # at end of round puzzle_id returns "locked"
 
 # transition screen when game is locked
+
+def select_mystery_solver(user_list):
+    return user_list[0]
+
 class Game(object):
     def __init__(self, gid, users):
         self.gid = gid
@@ -18,6 +22,7 @@ class Game(object):
         self.users_index = dict()
         for user in self.users:
             self.users_index[user.uid] = user
+        select_mystery_solver(self.users).mystery_solver = True
 
         # load puzzle database
         self.group = 0

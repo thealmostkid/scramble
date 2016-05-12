@@ -17,7 +17,11 @@
                 status_html += '<table>';
 			for (i = 0; i < data.users.length; i++) {
                 status_html += '<tr><td>';
-                status_html += 'Player <b>' + data.users[i].name + '</b> working on puzzle <i>' + data.users[i].puzzle + '</i>';
+                status_html += 'Player <b>' + data.users[i].name + '</b>';
+                if (data.users[i].mystery) {
+                    status_html += ' <font color="red">(mystery)</font>';
+                }
+                status_html += ' working on puzzle <i>' + data.users[i].puzzle + '</i>';
                 status_html += '</td></tr>';
             }
             status_html += '</table></td>';
@@ -35,7 +39,7 @@
 
 
 	(function puzzle() {
-		$.getJSON('/game/' + local.gid + '/puzzle/' + local.pid)
+		$.getJSON('/game/' + local.gid + '/user/' + local.uid + '/puzzle/' + local.pid)
 		.done(function(data) {
 			scramble_html = '';
 			for (i = 0; i < data.scramble.length; i++) {
@@ -49,6 +53,10 @@
                 document.getElementById("game.guess").style.visibility = "visible";
             } else {
                 document.getElementById("game.guess").style.visibility = "hidden";
+            }
+            if (data.hidden) {
+                html = 'YOU ARE NOT THE MYSTERY SOLVER';
+                document.getElementById("game.guess_box").innerHTML = html;
             }
 
 			if (data.message) {
@@ -138,7 +146,7 @@
 	<div id=wrapper>
     <tr>
     	<script type="text/javascript">
-        	html = "<td align=center><h3>Puzzle ";
+        	html = "<td align=center><h3>Scramble ";
 		html += local.pid;
 		html += ": </h3></td>";
 		document.write(html)
@@ -162,14 +170,14 @@
     <div id=wrapper>
     <tr id="game.guess">
       <td align=center valign=top><h3>Your Guess:</h3></td>
-      <td align=center valign=top>
+      <td align=center valign=top id="game.guess_box">
       <script type="text/javascript">
         document.write('<form action="/game/' + local.gid + '/puzzle/' + local.pid + '" method="post">');
         guess_html = '';
         for (i = 0; i < local.puzzle_len; i++) {
                 guess_html += '<input type="text"';
                 for (j = 0; j < local.puzzle_indices.length; j++) {
-                        if (i == local.puzzle_indices[j]) {
+                        if (i == (local.puzzle_indices[j] - 1)) {
                                 guess_html += ' id="highlight"';
                         }
                 }

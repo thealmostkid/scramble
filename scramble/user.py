@@ -6,3 +6,4 @@ class User(object):
         self.real_name = real_name
         self.puzzle = None
         self.game = None
+        self.mystery_solver = False

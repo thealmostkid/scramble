@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <title>JUMBLE</title>
 <link href="/jumble.css" rel="stylesheet" type="text/css">
+<style media="screen" type="text/css">
+#popup {
+        position: absolute;
+        height: 200px;
+        width: 400px;
+        margin: -100px 0 0 -200px;
+        top: 50%;
+        left: 50%;
+}
+</style>
 <script type="text/javascript" src="/jquery-1.12.2.min.js"></script>
 <script type="text/javascript">
 	var user = undefined;
@@ -15,7 +25,7 @@
 		.done(function(data) {
                 status_html = '<td align=center colspan=3>';
                 status_html += '<table>';
-			for (i = 0; i < data.users.length; i++) {
+           for (i = 0; i < data.users.length; i++) {
                 status_html += '<tr><td>';
                 status_html += 'Player <b>' + data.users[i].name + '</b>';
                 if (data.users[i].mystery) {
@@ -28,6 +38,13 @@
 			document.getElementById('game.status').innerHTML = status_html;
 
 			document.getElementById('game.time').innerHTML = "Time remaining: " + data.timer;
+            if (Math.floor(data.timer / 10) % 2) {
+                document.getElementById("popup").style.visibility = "visible";
+                document.getElementById("main").style.opacity = "0.3";
+            } else {
+                document.getElementById("popup").style.visibility = "hidden";
+                document.getElementById("main").style.opacity = "1.0";
+            }
 			setTimeout(activity, 1000);
 		})
 		.fail(function() {
@@ -81,6 +98,7 @@
 
 
         <center>
+                <div id="main">
 <table border=0> 
 
 	<!-- timer -->
@@ -211,7 +229,12 @@
     </div>
     
 </table>
+</div>
 </center>
+
+<div id="popup" style="z-index=100; background-color: lightblue" width=500 height=100>
+        <p>Hello World!</p>
+</div>
 
 <script type="text/javascript">
     if (local.previous != null) {

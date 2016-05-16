@@ -31,7 +31,7 @@
                 if (data.users[i].mystery) {
                     status_html += ' <font color="red">(mystery)</font>';
                 }
-                status_html += ' working on puzzle <i>' + data.users[i].puzzle + '</i>';
+                status_html += ' working on scramble <i>' + data.users[i].puzzle + '</i>';
                 status_html += '</td></tr>';
             }
             status_html += '</table></td>';
@@ -165,7 +165,7 @@
     <tr>
     	<script type="text/javascript">
         	html = "<td align=center><h3>Scramble ";
-		html += local.pid;
+		html += local.puzzle_name;
 		html += ": </h3></td>";
 		document.write(html)
 	</script>

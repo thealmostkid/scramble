@@ -122,7 +122,7 @@ def MakeHandlerClassFromArgv(engine):
             for user in game.users:
                 users.append({'name': user.uid,
                     'mystery': user.mystery_solver,
-                    'puzzle': user.puzzle.pid})
+                    'puzzle': user.puzzle.pretty_name})
             values['users'] = users
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -240,6 +240,7 @@ def MakeHandlerClassFromArgv(engine):
                     if 'LOCAL' in line:
                         values = {
                                 'pid': user.puzzle.pid,
+                                'puzzle_name': user.puzzle.pretty_name,
                                 'uid': user.uid,
                                 'gid': game.gid,
                                 'puzzle_len': len(user.puzzle.value),

@@ -35,7 +35,7 @@ class Game(object):
             for p in xrange(len(group) - 1):
                 parts = group[p]
                 puzzle = scramble.puzzle.Puzzle('r%dp%d' % (g, p),
-                        parts[0], parts[1])
+                        str(p + 1), parts[0], parts[1])
                 # set indices
                 if len(parts) > 2:
                     puzzle.indices = parts[2]
@@ -45,7 +45,7 @@ class Game(object):
                 puzzles.append(puzzle)
 
             # special mystery puzzle
-            mystery = scramble.puzzle.Puzzle('r%dm' % g, group[-1][0], '')
+            mystery = scramble.puzzle.Puzzle('r%dm' % g, 'Mystery', group[-1][0], '')
             mystery.prev_puzzle = puzzles[-1]
             mystery.prev_puzzle.next_puzzle = mystery
             puzzles.append(mystery)

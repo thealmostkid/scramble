@@ -139,8 +139,9 @@ def mutate(string):
     return result
 
 class Puzzle(object):
-    def __init__(self, pid, value, scramble):
+    def __init__(self, pid, name, value, scramble):
         self.pid = pid
+        self.pretty_name = name
         self.value = value
         self.scramble = scramble
         self.indices = list()

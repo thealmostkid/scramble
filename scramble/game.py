@@ -12,12 +12,18 @@ import time
 
 # transition screen when game is locked
 
+def game_time_limit():
+    # seven minutes
+    return 60 * 7
+
 def select_mystery_solver(user_list):
     return user_list[0]
 
 class Game(object):
     def __init__(self, gid, users):
         self.gid = gid
+        self.solved = False
+
         self.users = users
         self.users_index = dict()
         for user in self.users:
@@ -64,7 +70,8 @@ class Game(object):
         self.start = time.time()
 
     def timer(self):
-        return int(time.time() - self.start)
+        elapsed = int(time.time() - self.start)
+        return game_time_limit() - elapsed
 
     def get_puzzle(self, pid):
         return self.puzzles_index[pid]
@@ -79,4 +86,6 @@ class Game(object):
         mystery = self.get_puzzle('r0m')
         for index in puzzle.indices:
             mystery.scramble += puzzle.value[index - 1]
-
+        self.solved = True
+        for puzzle in self.groups[0]:
+            self.solved = puzzle.solved and self.solved

@@ -117,7 +117,9 @@ def MakeHandlerClassFromArgv(engine):
                 return
 
             # list of each user
-            values = {'timer': game.timer()}
+            time_remaining = game.timer()
+            values = {'timer': time_remaining if time_remaining > 0 else 0,
+                    'finished': (time_remaining <= 0 or game.solved)}
             users = list()
             for user in game.users:
                 users.append({'name': user.uid,

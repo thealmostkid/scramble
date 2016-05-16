@@ -38,9 +38,9 @@
 			document.getElementById('game.status').innerHTML = status_html;
 
 			document.getElementById('game.time').innerHTML = "Time remaining: " + data.timer;
-            if (Math.floor(data.timer / 10) % 2) {
+            if (data.finished) {
                 document.getElementById("popup").style.visibility = "visible";
-                document.getElementById("main").style.opacity = "0.3";
+                document.getElementById("main").style.opacity = "0.1";
             } else {
                 document.getElementById("popup").style.visibility = "hidden";
                 document.getElementById("main").style.opacity = "1.0";
@@ -233,7 +233,7 @@
 </center>
 
 <div id="popup" style="z-index=100; background-color: lightblue" width=500 height=100>
-        <p>Hello World!</p>
+        <p>Game Done!</p>
 </div>
 
 <script type="text/javascript">

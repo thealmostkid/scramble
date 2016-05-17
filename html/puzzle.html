@@ -38,8 +38,19 @@
 			document.getElementById('game.status').innerHTML = status_html;
 
 			document.getElementById('game.time').innerHTML = "Time remaining: " + data.timer;
-            if (data.finished) {
-                document.getElementById("popup").style.visibility = "visible";
+            if (data.state) {
+                popup = document.getElementById("popup");
+                html = '<p>' + data.state + '</p>';
+                html += '<form action = "/game/';
+                html += local.gid;
+                html += '/advance" method="post">';
+                html += '<input type="hidden" name="uid" value="';
+                html += local.uid;
+                html += '">';
+                html += '<input type="submit" value="Continue">';
+                html += '</form>';
+                popup.innerHTML = html;
+                popup.style.visibility = "visible";
                 document.getElementById("main").style.opacity = "0.1";
             } else {
                 document.getElementById("popup").style.visibility = "hidden";

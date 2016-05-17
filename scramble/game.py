@@ -31,7 +31,6 @@ class Game(object):
         select_mystery_solver(self.users).mystery_solver = True
 
         # load puzzle database
-        self.group = 0
         puzzle_database = scramble.puzzle.parse(
                 scramble.puzzle.DEFAULT.split('\n'))
         self.groups = list()
@@ -63,11 +62,16 @@ class Game(object):
             for puzzle in group:
                 self.puzzles_index[puzzle.pid] = puzzle
 
-        # all players start game at first puzzle
-        for user in users:
-            user.puzzle = self.groups[self.group][0]
+        # set up game for first group
+        self.start_group(0)
 
+    def start_group(self, gindx):
+        self.group = gindx
         self.start = time.time()
+        self.solved = False
+        # all players start game at first puzzle
+        for user in self.users:
+            user.puzzle = self.groups[self.group][0]
 
     def timer(self):
         elapsed = int(time.time() - self.start)
@@ -83,9 +87,9 @@ class Game(object):
         puzzle = self.get_puzzle(pid)
         puzzle.solve(uid)
         # TODO: dynamic based on round
-        mystery = self.get_puzzle('r0m')
+        mystery = self.groups[self.group][-1]
         for index in puzzle.indices:
             mystery.scramble += puzzle.value[index - 1]
         self.solved = True
-        for puzzle in self.groups[0]:
+        for puzzle in self.groups[self.group]:
             self.solved = puzzle.solved and self.solved

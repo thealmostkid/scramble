@@ -118,8 +118,13 @@ def MakeHandlerClassFromArgv(engine):
 
             # list of each user
             time_remaining = game.timer()
+            state = None
+            if game.solved:
+                state = 'solved'
+            elif time_remaining <= 0:
+                state = 'expired'
             values = {'timer': time_remaining if time_remaining > 0 else 0,
-                    'finished': (time_remaining <= 0 or game.solved)}
+                    'state': state}
             users = list()
             for user in game.users:
                 users.append({'name': user.uid,
@@ -339,6 +344,8 @@ def MakeHandlerClassFromArgv(engine):
                 return self.do_POST_game_puzzle(path_parts, params)
             elif 'user' == command:
                 return self.do_POST_game_user(path_parts, params)
+            elif 'advance' == command:
+                return self.do_POST_game_advance(path_parts, params)
             else:
                 self.send_error(404)
                 return
@@ -428,7 +435,32 @@ def MakeHandlerClassFromArgv(engine):
             params['message'] = [guess_message]
             path = ['game', gid, 'user', uid]
             return self.do_GET_game_user(path, params)
-    
+
+   # POST /game/<gid>/advance - guess puzzle
+        def do_POST_game_advance(self, path_parts, params):
+            if len(path_parts) < 3:
+                self.send_error(404)
+                return
+
+            assert(path_parts[0] == 'game')
+            assert(path_parts[2] == 'advance')
+
+            if 'uid' not in params:
+                self.send_error(404, 'Post request missing "uid"')
+                return
+
+            gid = path_parts[1]
+            try:
+                game = engine.game(gid)
+            except KeyError:
+                self.send_error(404, 'Unknown game id %s' % gid)
+                return
+
+            game.start_group(game.group + 1)
+            uid = params['uid'][0]
+            path = ['game', gid, 'user', uid]
+            return self.do_GET_game_user(path, params)
+
         def poll_get(self, path_parts, params):
             self.send_response(200)
             self.send_header('Content-type',    'application/json')

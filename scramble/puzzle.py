@@ -2,14 +2,30 @@
 Logic for running a puzzle.
 '''
 
+#DEFAULT = '''
+#round
+#puzzle DRAWN DNRAW 2,3,4
+#puzzle IRONY INROY 1,5
+#puzzle WALNUT AWLUTN 2
+#puzzle PENCIL CILNEP
+#puzzle STYLE TESYL
+#puzzle MELODY DYLOME
+#mystery AIRWAY
+#round
+#puzzle DRAWN DNRAW 2,3,4
+#puzzle WALNUT AWLUTN 2
+#puzzle PENCIL CILNEP 5
+#puzzle STYLE TESYL 3
+#puzzle IRONY INROY
+#puzzle MELODY DYLOME
+#mystery AIRWAY'''
+
 DEFAULT = '''
 round
 puzzle DRAWN DNRAW 2,3,4
-puzzle IRONY INROY 1,5
+mystery AIRWAY
+round
 puzzle WALNUT AWLUTN 2
-puzzle PENCIL CILNEP
-puzzle STYLE TESYL
-puzzle MELODY DYLOME
 mystery AIRWAY'''
 
 def parse(lines):

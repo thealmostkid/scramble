@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import scramble.server
 import scramble.__version
 import socket
@@ -20,7 +21,17 @@ def gui():
     ver.grid(column=0, row=0, columnspan=2, sticky='EW')
 
     host_name = socket.getfqdn()
-    ip_addr = socket.gethostbyname(host_name)
+    ip_addr = None
+    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]:
+        s.connect(('8.8.8.8', 53))
+        addr = s.getsockname()[0]
+        s.close()
+        if not addr.startswith('127.'):
+            ip_addr = addr
+            continue
+    if ip_addr is None:
+        ip_addr = "Failed to determine IP address"
+
     url = Tkinter.Label(root, anchor="w",
             text='The URL is http://%s:%d/\nor http://%s:%d/' % (host_name,
                 scramble.server.SERVER_PORT, ip_addr,

@@ -16,13 +16,15 @@
 </style>
 <script type="text/javascript" src="/jquery-1.12.2.min.js"></script>
 <script type="text/javascript">
-	var user = undefined;
-	var message = undefined;
-	LOCAL
+    var user = undefined;
+    var message = undefined;
+    LOCAL
 
-	(function activity() {
-		$.getJSON('/game/' + local.gid)
-		.done(function(data) {
+    function pad(n){return n<10 ? '0'+n : n}
+
+    (function activity() {
+        $.getJSON('/game/' + local.gid)
+        .done(function(data) {
                 status_html = '<td align=center colspan=3>';
                 status_html += '<table>';
            for (i = 0; i < data.users.length; i++) {
@@ -35,9 +37,14 @@
                 status_html += '</td></tr>';
             }
             status_html += '</table></td>';
-			document.getElementById('game.status').innerHTML = status_html;
+            document.getElementById('game.status').innerHTML = status_html;
 
-			document.getElementById('game.time').innerHTML = "Time remaining: " + data.timer;
+            time_left = new Date(data.timer * 1000);
+            time_string = "Time remaining: ";
+            time_string += pad(time_left.getUTCHours()) + ":";
+            time_string += pad(time_left.getUTCMinutes()) + ":";
+            time_string += pad(time_left.getUTCSeconds());
+            document.getElementById('game.time').innerHTML = time_string;
             if (data.state) {
                 popup = document.getElementById("popup");
                 html = '<p>' + data.state + '</p>';

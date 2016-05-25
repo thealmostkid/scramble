@@ -22,6 +22,22 @@
 
     function pad(n){return n<10 ? '0'+n : n}
 
+    function MoveGuessCursor(textBox) {
+            pos = parseInt(textBox.name.slice(-1));
+            if (textBox.value === "") {
+                    // do nothing if text is empty (delete?)
+                    return;
+            }
+            if (pos < (local.puzzle_len - 1)) {
+                    id = "l" + (pos + 1);
+                    next = document.getElementById(id);
+                    next.focus()
+            } else {
+                    submit = document.getElementById('guess.submit');
+                    submit.focus()
+            }
+    }
+
     (function activity() {
         $.getJSON('/game/' + local.gid)
         .done(function(data) {
@@ -73,7 +89,7 @@
 	})();
 
 
-	(function puzzle() {
+    (function puzzle() {
 		$.getJSON('/game/' + local.gid + '/user/' + local.uid + '/puzzle/' + local.pid)
 		.done(function(data) {
 			scramble_html = '';
@@ -212,12 +228,21 @@
         document.write('<form action="/game/' + local.gid + '/puzzle/' + local.pid + '" method="post">');
         guess_html = '';
         for (i = 0; i < local.puzzle_len; i++) {
-                guess_html += '<input type="text"';
+                highlighted = false;
                 for (j = 0; j < local.puzzle_indices.length; j++) {
                         if (i == (local.puzzle_indices[j] - 1)) {
-                                guess_html += ' id="highlight"';
+                                highlighted = true;
                         }
                 }
+                if (highlighted) {
+                        guess_html += '<input type="text"';
+                        // TODO: read background from style sheet
+                        guess_html += ' style="background:yellow;"';
+                } else {
+                        guess_html += '<input type="text"';
+                }
+                guess_html += ' id="l' + i + '"';
+                guess_html += ' oninput="MoveGuessCursor(this)"';
                 guess_html += ' name="l' + i + '"';
                 guess_html += ' maxlength=1 size=1>';
         }
@@ -225,7 +250,7 @@
         document.write('<input type="hidden" name="uid" value="' + local.uid + '">');
       </script>
       <br><br>
-      <input type="submit" value="Submit">
+      <input type="submit" value="Submit" id="guess.submit">
       </form>
       </td>
     </tr>

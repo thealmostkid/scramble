@@ -1,7 +1,8 @@
 import BaseHTTPServer
 import cgi
-import urlparse
 import json
+import time
+import urlparse
 
 import scramble.engine
 
@@ -22,6 +23,7 @@ def MakeHandlerClassFromArgv(engine):
             paths['game'] = self.do_GET_game
             paths['lobby'] = self.do_GET_lobby
             paths['user'] = self.do_GET_user
+            paths['admin'] = self.do_GET_admin
     
             incoming = urlparse.urlparse(self.path)
             qs = urlparse.parse_qs(incoming.query)
@@ -51,6 +53,26 @@ def MakeHandlerClassFromArgv(engine):
                 return
             else:
                 self.send_error(500, 'Get not implemented for %s' % incoming.path)
+                return
+
+        #
+        # admin API
+        #
+        def do_GET_admin(self, path_parts, params):
+            assert(path_parts[0] == 'admin')
+            if len(path_parts) == 1:
+                path = ['admin.html']
+                self._html(path, params)
+                return
+
+            cmd = path_parts[1]
+            if 'stats.csv' == cmd:
+                self.send_response(200)
+                self.send_header('Content-type', 'text/csv')
+                self.end_headers()
+                self.wfile.write('timestamp,event,value1,value2\n')
+                for stat in engine.stats:
+                    self.wfile.write('%s\n' % ','.join(stat))
                 return
 
         #
@@ -388,6 +410,8 @@ def MakeHandlerClassFromArgv(engine):
                         'Unknown puzzle action: "%s"' % puzzle_change)
                 return
             path = ['game', gid, 'user', uid]
+            engine.record_stat(time.time(), 'start_puzzle', user.uid,
+                    user.puzzle.pid)
             return self.do_GET_game_user(path, params)
 
 # POST /game/<gid>/puzzle/<pid> - guess puzzle
@@ -428,6 +452,10 @@ def MakeHandlerClassFromArgv(engine):
             uid = params['uid'][0]
             if puzzle.guess(guess):
                 game.solve(pid, uid)
+                engine.record_stat(time.time(), 'puzzle_solve', pid, uid)
+                if game.solved:
+                    engine.record_stat(time.time(), 'solve_round', game.gid,
+                            game.group)
                 guess_message += 'correct'
             else:
                 guess_message += 'incorrect'
@@ -456,7 +484,9 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown game id %s' % gid)
                 return
 
-            game.start_group(game.group + 1)
+            if game.solved:
+                game.start_group(game.group + 1)
+                engine.record_stat(game.start, 'round_start', game.gid, game.group)
             uid = params['uid'][0]
             path = ['game', gid, 'user', uid]
             return self.do_GET_game_user(path, params)

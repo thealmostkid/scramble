@@ -1,4 +1,5 @@
 import random
+import time
 
 import scramble.game
 import scramble.user
@@ -164,6 +165,7 @@ class Engine(object):
     def __init__(self):
         self.games = dict()
         self.users = dict()
+        self.stats = list()
 
     def user(self, uid):
         return self.users[uid]
@@ -173,6 +175,7 @@ class Engine(object):
                 names[random.randint(0, len(names) - 1)])
         user = scramble.user.User(uid, real_name)
         self.users[uid] = user
+        self.record_stat(time.time(), 'create_user', real_name, uid)
         return user
 
     def poll_for_new_game(self):
@@ -213,4 +216,9 @@ class Engine(object):
         self.games[gid] = game
         for user in user_list:
             user.game = game
+
+        self.record_stat(game.start, 'round_start', game.gid, game.group)
         return game
+
+    def record_stat(self, timestamp, event_name, item, value):
+        self.stats.append(['%d' % timestamp, str(event_name), str(item), str(value)])

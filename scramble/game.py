@@ -39,7 +39,7 @@ class Game(object):
             group = puzzle_database[g]
             for p in xrange(len(group) - 1):
                 parts = group[p]
-                puzzle = scramble.puzzle.Puzzle('r%dp%d' % (g, p),
+                puzzle = scramble.puzzle.Puzzle('%sr%dp%d' % (gid, g, p),
                         str(p + 1), parts[0], parts[1])
                 # set indices
                 if len(parts) > 2:

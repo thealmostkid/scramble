@@ -174,18 +174,6 @@ class Puzzle(object):
         self.solved = True
         self.message = 'solved by %s' % uid
 
-    def js_object(self):
-        result = '{pid:"%s",scramble:"%s"' % (self.pid, self.scramble())
-        if self.prev_puzzle is not None:
-            result += ',previous:"%s"' % self.prev_puzzle.pid
-        if self.next_puzzle is not None:
-            result += ',next:"%s"' % self.next_puzzle.pid
-        if self.state is not None:
-            result += ',state:"%s"' % self.state
-        # TODO: previous, next
-        result += '}'
-        return result
-
 def main():
     test_validate()
     test_parse()

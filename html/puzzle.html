@@ -55,8 +55,8 @@
             } else {
                 document.getElementById("popup").style.visibility = "hidden";
                 document.getElementById("main").style.opacity = "1.0";
+			    setTimeout(activity, 1000);
             }
-			setTimeout(activity, 1000);
 		})
 		.fail(function() {
 			document.getElementById('game.status').innerHTML = "<p>Error</p>";

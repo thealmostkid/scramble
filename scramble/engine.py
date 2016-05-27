@@ -175,7 +175,6 @@ class Engine(object):
                 names[random.randint(0, len(names) - 1)])
         user = scramble.user.User(uid, real_name)
         self.users[uid] = user
-        self.record_stat(time.time(), 'create_user', real_name, uid)
         return user
 
     def poll_for_new_game(self):
@@ -218,6 +217,10 @@ class Engine(object):
             user.game = game
 
         self.record_stat(game.start, 'round_start', game.gid, game.group)
+        for user in game.users:
+            self.record_stat(game.start, 'puzzle_start', user.puzzle.pid,
+                    user.uid)
+
         return game
 
     def record_stat(self, timestamp, event_name, item, value):

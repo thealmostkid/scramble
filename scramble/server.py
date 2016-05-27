@@ -19,7 +19,6 @@ def MakeHandlerClassFromArgv(engine):
 
         def do_GET(self):
             paths = dict()
-            paths['poll'] = self.poll_get
             paths['game'] = self.do_GET_game
             paths['lobby'] = self.do_GET_lobby
             paths['user'] = self.do_GET_user
@@ -27,11 +26,7 @@ def MakeHandlerClassFromArgv(engine):
     
             incoming = urlparse.urlparse(self.path)
             qs = urlparse.parse_qs(incoming.query)
-            print 'qs = %s' % qs
-    
             path_parts = incoming.path.split('/')
-            print 'PARTS %s' % path_parts
-            print 'LEN = %d' % len(path_parts)
             while len(path_parts) > 0 and path_parts[0] == '':
                 path_parts.pop(0)
 
@@ -130,6 +125,34 @@ def MakeHandlerClassFromArgv(engine):
         #
         # game API
         #
+# GET /game/<gid> - get game status (json)
+        def do_GET_game(self, path_parts, params):
+            '''
+            Entry point for all GET endpoints for /game/<gid>
+            '''
+            assert(path_parts[0] == 'game')
+            if len(path_parts) < 2:
+                self.send_error(404, 'Game id is missing')
+                return
+
+            gid = path_parts[1]
+            try:
+                game = engine.game(gid)
+            except KeyError:
+                self.send_error(404, 'Unknown game id %s' % gid)
+                return
+
+            if len(path_parts) == 2:
+                return self.do_GET_game_status(path_parts, params)
+
+            action = path_parts[2]
+            if action == 'user':
+                return self.do_GET_game_user(path_parts, params)
+            else:
+                self.send_error(404)
+            return
+
+# GET /game/<gid>
         def do_GET_game_status(self, path_parts, params):
             gid = path_parts[1]
             try:
@@ -157,33 +180,6 @@ def MakeHandlerClassFromArgv(engine):
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write('%s' % json.dumps(values))
-            return
-
-# GET /game/<gid> - get game status (json)
-        def do_GET_game(self, path_parts, params):
-            '''
-            Entry point for all GET endpoints for /game/<gid>
-            '''
-            assert(path_parts[0] == 'game')
-            if len(path_parts) < 2:
-                self.send_error(404, 'Game id is missing')
-                return
-
-            gid = path_parts[1]
-            try:
-                game = engine.game(gid)
-            except KeyError:
-                self.send_error(404, 'Unknown game id %s' % gid)
-                return
-
-            if len(path_parts) == 2:
-                return self.do_GET_game_status(path_parts, params)
-
-            action = path_parts[2]
-            if action == 'user':
-                return self.do_GET_game_user(path_parts, params)
-            else:
-                self.send_error(404)
             return
 
 # GET /game/<gid>/puzzle/<pid>
@@ -259,7 +255,11 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown userid "%s"' % uid)
                 return
 
-            source_file = 'html/puzzle.html'
+            if not game.completed():
+                source_file = 'html/puzzle.html'
+            else:
+                source_file = 'html/credits.html'
+
             try:
                 f = open(source_file)
                 self.send_response(200)
@@ -337,6 +337,7 @@ def MakeHandlerClassFromArgv(engine):
                     return
                 real_name = params['real-name'][0]
                 user = engine.create_user(real_name)
+                self.record_stat(time.time(), 'user_create', real_name, user.uid)
                 engine.poll_for_new_game()
                 path = ['lobby', user.uid]
                 return self.do_GET_lobby(path, params)
@@ -353,9 +354,6 @@ def MakeHandlerClassFromArgv(engine):
             if len(path_parts) < 2:
                 self.send_error(404)
                 return
-
-            if path_parts[1] == 'create':
-                return self.do_POST_game_create(path_parts, params)
 
             if len(path_parts) < 3:
                 self.send_error(404)
@@ -410,8 +408,8 @@ def MakeHandlerClassFromArgv(engine):
                         'Unknown puzzle action: "%s"' % puzzle_change)
                 return
             path = ['game', gid, 'user', uid]
-            engine.record_stat(time.time(), 'start_puzzle', user.uid,
-                    user.puzzle.pid)
+            engine.record_stat(time.time(), 'puzzle_start', user.puzzle.pid,
+                    user.uid)
             return self.do_GET_game_user(path, params)
 
 # POST /game/<gid>/puzzle/<pid> - guess puzzle
@@ -450,11 +448,13 @@ def MakeHandlerClassFromArgv(engine):
             guess_message = 'Guess "%s" is ' % guess
 
             uid = params['uid'][0]
+            engine.record_stat(time.time(), 'puzzle_guess', pid, uid)
+
             if puzzle.guess(guess):
                 game.solve(pid, uid)
                 engine.record_stat(time.time(), 'puzzle_solve', pid, uid)
                 if game.solved:
-                    engine.record_stat(time.time(), 'solve_round', game.gid,
+                    engine.record_stat(time.time(), 'round_solve', game.gid,
                             game.group)
                 guess_message += 'correct'
             else:
@@ -484,20 +484,26 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown game id %s' % gid)
                 return
 
+            restart = False
             if game.solved:
+                restart = True
+            elif game.timer() <= 0:
+                engine.record_stat(time.time(), 'round_expired', game.gid, game.group)
+                restart = True
+
+            if restart:
+                # load next level
                 game.start_group(game.group + 1)
-                engine.record_stat(game.start, 'round_start', game.gid, game.group)
+                if not game.completed():
+                    engine.record_stat(game.start, 'round_start', game.gid, game.group)
+                    for user in game.users:
+                        engine.record_stat(game.start, 'puzzle_start',
+                                user.puzzle.pid, user.uid)
+
             uid = params['uid'][0]
             path = ['game', gid, 'user', uid]
             return self.do_GET_game_user(path, params)
 
-        def poll_get(self, path_parts, params):
-            self.send_response(200)
-            self.send_header('Content-type',    'application/json')
-            self.end_headers()
-            self.wfile.write('[1,2]')
-            return
-    
         def load_js(self, url, params):
             f = open('js/%s' % self.path)
             self.send_response(200)
@@ -506,7 +512,7 @@ def MakeHandlerClassFromArgv(engine):
             self.wfile.write(f.read())
             f.close()
             return
-    
+
         def _html(self, path_parts, params):
             f = open('html/%s' % path_parts[-1])
             self.send_response(200)

@@ -50,7 +50,7 @@ class Game(object):
                 puzzles.append(puzzle)
 
             # special mystery puzzle
-            mystery = scramble.puzzle.Puzzle('r%dm' % g, 'Mystery', group[-1][0], '')
+            mystery = scramble.puzzle.Puzzle('%sr%dm' % (gid, g), 'Mystery', group[-1][0], '')
             mystery.prev_puzzle = puzzles[-1]
             mystery.prev_puzzle.next_puzzle = mystery
             puzzles.append(mystery)
@@ -65,8 +65,13 @@ class Game(object):
         # set up game for first group
         self.start_group(0)
 
+    def completed(self):
+        return self.group >= len(self.groups)
+
     def start_group(self, gindx):
         self.group = gindx
+        if self.completed():
+            return
         self.start = time.time()
         self.solved = False
         # all players start game at first puzzle

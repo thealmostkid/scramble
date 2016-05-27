@@ -20,7 +20,7 @@ def select_mystery_solver(user_list):
     return user_list[0]
 
 class Game(object):
-    def __init__(self, gid, users):
+    def __init__(self, gid, users, puzzle_database):
         self.gid = gid
         self.solved = False
 
@@ -31,8 +31,6 @@ class Game(object):
         select_mystery_solver(self.users).mystery_solver = True
 
         # load puzzle database
-        puzzle_database = scramble.puzzle.parse(
-                scramble.puzzle.DEFAULT.split('\n'))
         self.groups = list()
         for g in xrange(len(puzzle_database)):
             puzzles = list()

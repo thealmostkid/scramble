@@ -5,6 +5,7 @@ import time
 import urlparse
 
 import scramble.engine
+import scramble.puzzle
 
 SERVER_PORT = 8001
 
@@ -19,11 +20,11 @@ def MakeHandlerClassFromArgv(engine):
 
         def do_GET(self):
             paths = dict()
+            paths['admin'] = self.do_GET_admin
             paths['game'] = self.do_GET_game
             paths['lobby'] = self.do_GET_lobby
             paths['user'] = self.do_GET_user
-            paths['admin'] = self.do_GET_admin
-    
+
             incoming = urlparse.urlparse(self.path)
             qs = urlparse.parse_qs(incoming.query)
             path_parts = incoming.path.split('/')
@@ -53,6 +54,22 @@ def MakeHandlerClassFromArgv(engine):
         #
         # admin API
         #
+        def dump_scramble(self, scramble, scramble_type, output):
+            output.write('<tr>')
+            output.write('<td>%s</td>' % scramble_type)
+            output.write('<td>%s</td>' % scramble[0])
+            output.write('<td>')
+            if len(scramble) > 1:
+                output.write(scramble[1])
+            output.write('</td>')
+
+            output.write('<td>')
+            if len(scramble) > 2:
+                output.write(','.join([str(indx) for indx in scramble[2]]))
+            output.write('</td>')
+
+            output.write('</tr>')
+
         def do_GET_admin(self, path_parts, params):
             assert(path_parts[0] == 'admin')
             if len(path_parts) == 1:
@@ -69,6 +86,24 @@ def MakeHandlerClassFromArgv(engine):
                 for stat in engine.stats:
                     self.wfile.write('%s\n' % ','.join(stat))
                 return
+            elif 'puzzles' == cmd:
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write('<html><body>')
+                for puzzle in engine.puzzle_database:
+                    self.wfile.write('<table border=1>')
+                    for j in xrange(len(puzzle) - 1):
+                        scramble = puzzle[j]
+                        self.dump_scramble(scramble, 'puzzle', self.wfile)
+                    scramble = puzzle[-1]
+                    self.dump_scramble(scramble, 'mystery', self.wfile)
+                    self.wfile.write('</table>')
+                self.wfile.write('<form action="/admin/puzzles" method="post" enctype="multipart/form-data">')
+                self.wfile.write('<input type="file" name="puzzles_file" id="puzzles_file">')
+                self.wfile.write('<input type="submit" value="Upload">')
+                self.wfile.write('</form>')
+                self.wfile.write('</body></html>')
 
         #
         # lobby API
@@ -294,20 +329,21 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(501, 'failed to load %s' % source_file)
                 return
             return
-    
+
         #
         # POST
         #
         def do_POST(self):
             paths = dict()
+            paths['admin'] = self.do_POST_admin
             paths['game'] = self.do_POST_game
             paths['user'] = self.do_POST_user
-    
+
             incoming = urlparse.urlparse(self.path)
             path_parts = incoming.path.split('/')
             while path_parts[0] == '':
                 path_parts.pop(0)
-    
+
             form = cgi.FieldStorage(
                     fp=self.rfile,
                     headers=self.headers,
@@ -320,12 +356,36 @@ def MakeHandlerClassFromArgv(engine):
                 if type(value) != type(list()):
                     value = [value]
                 qs[key] = value
-    
+
             if path_parts[0] in paths:
                 return paths[path_parts[0]](path_parts, qs)
             else:
                 self.send_error(404, 'Post not implemented for %s' % self.path)
             return
+
+        #
+        # admin API
+        #
+        def do_POST_admin(self, path_parts, params):
+            assert(path_parts[0] == 'admin')
+            if len(path_parts) == 1:
+                parts = ['admin']
+                return self.do_GET_admin(parts, params)
+
+            cmd = path_parts[1]
+            if cmd == 'puzzles':
+                try:
+                    engine.puzzle_database = scramble.puzzle.parse(params['puzzles_file'][0].split('\n'))
+                except Exception as e:
+                    self.send_error(400, 'Invalid puzzle list')
+                    self.wfile.write('<h3>File Error:</h3><p><i>%s</i></p>' % e)
+                    self.wfile.write('<a href="/admin/puzzles">Back</a>')
+                    return
+                parts = ['admin', 'puzzles']
+                return self.do_GET_admin(parts, params)
+            else:
+                self.send_error(404, 'Post admin not implemented for %s' % self.path)
+                return
 
 # POST /user/create - make a new user
         def do_POST_user(self, path_parts, params):
@@ -337,7 +397,7 @@ def MakeHandlerClassFromArgv(engine):
                     return
                 real_name = params['real-name'][0]
                 user = engine.create_user(real_name)
-                self.record_stat(time.time(), 'user_create', real_name, user.uid)
+                engine.record_stat(time.time(), 'user_create', real_name, user.uid)
                 engine.poll_for_new_game()
                 path = ['lobby', user.uid]
                 return self.do_GET_lobby(path, params)

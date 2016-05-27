@@ -166,6 +166,8 @@ class Engine(object):
         self.games = dict()
         self.users = dict()
         self.stats = list()
+        self.puzzle_database = scramble.puzzle.parse(
+                scramble.puzzle.DEFAULT.split('\n'))
 
     def user(self, uid):
         return self.users[uid]
@@ -211,7 +213,7 @@ class Engine(object):
             indx += 1
 
         gid = '%s%d' % (GID_PREFIX, indx)
-        game = scramble.game.Game(gid, user_list)
+        game = scramble.game.Game(gid, user_list, self.puzzle_database)
         self.games[gid] = game
         for user in user_list:
             user.game = game

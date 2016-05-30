@@ -1,83 +1,83 @@
 '''
-Logic for running a puzzle.
+Logic for running a scramble.
 '''
 
-#DEFAULT = '''
-#round
-#puzzle DRAWN DNRAW 2,3,4
-#puzzle IRONY INROY 1,5
-#puzzle WALNUT AWLUTN 2
-#puzzle PENCIL CILNEP
-#puzzle STYLE TESYL
-#puzzle MELODY DYLOME
-#mystery AIRWAY
-#round
-#puzzle DRAWN DNRAW 2,3,4
-#puzzle WALNUT AWLUTN 2
-#puzzle PENCIL CILNEP 5
-#puzzle STYLE TESYL 3
-#puzzle IRONY INROY
-#puzzle MELODY DYLOME
-#mystery AIRWAY'''
+DEFAULT = '''
+puzzle
+scramble DRAWN DNRAW 2,3,4
+scramble IRONY INROY 1,5
+scramble WALNUT AWLUTN 2
+scramble PENCIL CILNEP
+scramble STYLE TESYL
+scramble MELODY DYLOME
+mystery AIRWAY
+puzzle
+scramble DRAWN DNRAW 2,3,4
+scramble WALNUT AWLUTN 2
+scramble PENCIL CILNEP 5
+scramble STYLE TESYL 3
+scramble IRONY INROY
+scramble MELODY DYLOME
+mystery AIRWAY'''
 
 DEFAULT = '''
-round
-puzzle DRAWN DNRAW 2,3,4
+puzzle
+scramble DRAWN DNRAW 2,3,4
 mystery AIRWAY
-round
-puzzle WALNUT AWLUTN 2
+puzzle
+scramble WALNUT AWLUTN 2
 mystery AIRWAY'''
 
 def parse(lines):
-    rounds = list()
-    current_round = None
+    puzzles = list()
+    current_puzzle = None
     for line in lines:
         line = line.strip()
         if line == '':
             continue
         parts = line.split()
 
-        # round
-        if parts[0] == 'round':
-            if current_round is not None:
-                if len(current_round) == 0:
-                    raise ValueError('No puzzles specified for the round')
-                rounds.append(current_round)
-            current_round = list()
         # puzzle
-        elif parts[0] == 'puzzle':
+        if parts[0] == 'puzzle':
+            if current_puzzle is not None:
+                if len(current_puzzle) == 0:
+                    raise ValueError('No scrambles specified for the puzzle')
+                puzzles.append(current_puzzle)
+            current_puzzle = list()
+        # scramble
+        elif parts[0] == 'scramble':
             if len(parts) < 3:
                 raise ValueError('No scramble specified: "%s"' % line)
-            puzzle = [parts[1], parts[2]]
+            scramble = [parts[1], parts[2]]
             if len(parts) > 3:
                 # raises ValueError if not an integer
                 indices = [int(index) for index in parts[3].split(',')]
-                puzzle.append(indices)
+                scramble.append(indices)
 
-            current_round.append(puzzle)
+            current_puzzle.append(scramble)
         # mystery
         elif parts[0] == 'mystery':
-            current_round.append([parts[1]])
+            current_puzzle.append([parts[1]])
         # failure
         else:
             raise ValueError('Unknown input: "%s"' % line)
 
-    if current_round is None:
-        raise ValueError('"round" not specified')
-    elif len(current_round) == 0:
-        raise ValueError('No puzzles specified for the round')
+    if current_puzzle is None:
+        raise ValueError('"puzzle" not specified')
+    elif len(current_puzzle) == 0:
+        raise ValueError('No scrambles specified for the puzzle')
 
-    rounds.append(current_round)
-    return rounds
+    puzzles.append(current_puzzle)
+    return puzzles
 
 def test_parse():
     print 'TEST PARSE'
     for database in [
             [''],
-            ['round'],
-            ['round','puzzle foo'],
-            ['round','puzzle foo ofo a,b,c'],
-            ['round','jumble foo ofo 1,2,3'],
+            ['puzzle'],
+            ['puzzle','scramble foo'],
+            ['puzzle','scramble foo ofo a,b,c'],
+            ['puzzle','jumble foo ofo 1,2,3'],
             ]:
         try:
             parse(database)
@@ -86,13 +86,13 @@ def test_parse():
             print ve
 
     for database in [
-            ['round','puzzle dude ddeu 2,4','mystery eu'],
+            ['puzzle','scramble dude ddeu 2,4','mystery eu'],
             DEFAULT.split('\n'),
             ]:
         try:
             result = parse(database)
             print result
-            validate_puzzles(result)
+            validate_scrambles(result)
             print 'Parsed'
         except ValueError as ve:
             print 'Unexpected error %s' % ve
@@ -115,21 +115,21 @@ def validate_scramble(solution, scramble):
         elif counter < 0:
             raise ValueError('Extra letter for "%s": (%s)' % (solution, char))
 
-def validate_puzzles(database):
-    for group in database:
+def validate_scrambles(database):
+    for puzzle in database:
         mystery_scramble = ''
-        for puzzle in group:
-            if len(puzzle) > 1:
-                validate_scramble(puzzle[0], puzzle[1])
-                if puzzle[0] == puzzle[1]:
-                    raise ValueError('Scramble is same as solution for "%s"' % (puzzle[0]))
-            if len(puzzle) > 2:
-                for index in puzzle[2]:
-                    if index > len(puzzle[0]):
+        for scramble in puzzle:
+            if len(scramble) > 1:
+                validate_scramble(scramble[0], scramble[1])
+                if scramble[0] == scramble[1]:
+                    raise ValueError('Scramble is same as solution for "%s"' % (scramble[0]))
+            if len(scramble) > 2:
+                for index in scramble[2]:
+                    if index > len(scramble[0]):
                         raise ValueError('Index %d is out of bounds (%s)' %
-                                (index, puzzle[0]))
-                    mystery_scramble += puzzle[0][index - 1]
-        mystery = group[-1][0]
+                                (index, scramble[0]))
+                    mystery_scramble += scramble[0][index - 1]
+        mystery = puzzle[-1][0]
         validate_scramble(mystery, mystery_scramble)
 
 def test_validate():
@@ -144,7 +144,7 @@ def test_validate():
         [[['man', 'man', [2]], ['a']]],
         ]:
         try:
-            validate_puzzles(database)
+            validate_scrambles(database)
             print 'Nothing wrong'
         except ValueError as ve:
             print ve
@@ -154,7 +154,7 @@ def mutate(string):
     result = string[2:] + string[0:2]
     return result
 
-class Puzzle(object):
+class Scramble(object):
     def __init__(self, pid, name, value, scramble):
         self.pid = pid
         self.pretty_name = name
@@ -164,8 +164,8 @@ class Puzzle(object):
 
         self.solved = False
         self.message = None
-        self.prev_puzzle = None
-        self.next_puzzle = None
+        self.prev_scramble = None
+        self.next_scramble = None
 
     def guess(self, submission):
         return self.value.lower() == submission.lower()

@@ -166,8 +166,8 @@ class Engine(object):
         self.games = dict()
         self.users = dict()
         self.stats = list()
-        self.puzzle_database = scramble.puzzle.parse(
-                scramble.puzzle.DEFAULT.split('\n'))
+        self.puzzle_database = scramble.scramble.parse(
+                scramble.scramble.DEFAULT.split('\n'))
 
     def user(self, uid):
         return self.users[uid]
@@ -218,9 +218,9 @@ class Engine(object):
         for user in user_list:
             user.game = game
 
-        self.record_stat(game.start, 'round_start', game.gid, game.group)
+        self.record_stat(game.start, 'puzzle_start', game.gid, game.group)
         for user in game.users:
-            self.record_stat(game.start, 'puzzle_start', user.puzzle.pid,
+            self.record_stat(game.start, 'scramble_start', user.scramble.pid,
                     user.uid)
 
         return game

@@ -1,16 +1,5 @@
-import scramble.puzzle
+import scramble.scramble
 import time
-# GET /game/gameid returns puzzle.js.  
-# 
-# puzzle.js GET /game/gameid/userid for puzzle id
-# PUT /game/gameid/userid to switch puzzles and update metrics
-# GET /game/gameid/puzzle/puzzle_id for json puzzle representation
-# PUT /game/gameid/puzzle/puzzle_id to solve
-# polls /game/gameid/puzzle/puzzle_id for server-side updates
-# Hidden scrambles are updated server-side and revealed via polling
-# at end of round puzzle_id returns "locked"
-
-# transition screen when game is locked
 
 def game_time_limit():
     # seven minutes
@@ -31,68 +20,67 @@ class Game(object):
         select_mystery_solver(self.users).mystery_solver = True
 
         # load puzzle database
-        self.groups = list()
+        self.puzzles = list()
         for g in xrange(len(puzzle_database)):
-            puzzles = list()
-            group = puzzle_database[g]
-            for p in xrange(len(group) - 1):
-                parts = group[p]
-                puzzle = scramble.puzzle.Puzzle('%sr%dp%d' % (gid, g, p),
+            scrambles = list()
+            puzzle = puzzle_database[g]
+            for p in xrange(len(puzzle) - 1):
+                parts = puzzle[p]
+                scramble = scramble.scramble.Puzzle('%sp%ds%d' % (gid, g, p),
                         str(p + 1), parts[0], parts[1])
                 # set indices
                 if len(parts) > 2:
-                    puzzle.indices = parts[2]
+                    scramble.indices = parts[2]
                 if p > 0:
-                    puzzle.prev_puzzle = puzzles[-1]
-                    puzzle.prev_puzzle.next_puzzle = puzzle
-                puzzles.append(puzzle)
+                    scramble.prev_scramble = scrambles[-1]
+                    scramble.prev_scramble.next_scramble = scramble
+                scrambles.append(scramble)
 
-            # special mystery puzzle
-            mystery = scramble.puzzle.Puzzle('%sr%dm' % (gid, g), 'Mystery', group[-1][0], '')
-            mystery.prev_puzzle = puzzles[-1]
-            mystery.prev_puzzle.next_puzzle = mystery
-            puzzles.append(mystery)
+            # special mystery scramble
+            mystery = scramble.scramble.Puzzle('%sp%dm' % (gid, g), 'Mystery', puzzle[-1][0], '')
+            mystery.prev_scramble = scrambles[-1]
+            mystery.prev_scramble.next_scramble = mystery
+            scrambles.append(mystery)
 
-            self.groups.append(puzzles)
+            self.puzzles.append(scrambles)
 
-        self.puzzles_index = dict()
-        for group in self.groups:
-            for puzzle in group:
-                self.puzzles_index[puzzle.pid] = puzzle
+        self.scrambles_index = dict()
+        for puzzle in self.puzzles:
+            for scramble in puzzle:
+                self.scrambles_index[scramble.pid] = scramble
 
-        # set up game for first group
-        self.start_group(0)
+        # set up game for first puzzle
+        self.start_puzzle(0)
 
     def completed(self):
-        return self.group >= len(self.groups)
+        return self.puzzle >= len(self.puzzles)
 
-    def start_group(self, gindx):
-        self.group = gindx
+    def start_puzzle(self, gindx):
+        self.puzzle = gindx
         if self.completed():
             return
         self.start = time.time()
         self.solved = False
-        # all players start game at first puzzle
+        # all players start game at first scramble
         for user in self.users:
-            user.puzzle = self.groups[self.group][0]
+            user.scramble = self.puzzles[self.puzzle][0]
 
     def timer(self):
         elapsed = int(time.time() - self.start)
         return game_time_limit() - elapsed
 
-    def get_puzzle(self, pid):
-        return self.puzzles_index[pid]
+    def get_scramble(self, pid):
+        return self.scrambles_index[pid]
 
     def get_user(self, uid):
         return self.users_index[uid]
 
     def solve(self, pid, uid):
-        puzzle = self.get_puzzle(pid)
-        puzzle.solve(uid)
-        # TODO: dynamic based on round
-        mystery = self.groups[self.group][-1]
-        for index in puzzle.indices:
-            mystery.scramble += puzzle.value[index - 1]
+        scramble = self.get_scramble(pid)
+        scramble.solve(uid)
+        mystery = self.puzzles[self.puzzle][-1]
+        for index in scramble.indices:
+            mystery.scramble += scramble.value[index - 1]
         self.solved = True
-        for puzzle in self.groups[self.group]:
-            self.solved = puzzle.solved and self.solved
+        for scramble in self.puzzles[self.puzzle]:
+            self.solved = scramble.solved and self.solved

@@ -103,6 +103,7 @@ def MakeHandlerClassFromArgv(engine):
                 self.wfile.write('<input type="file" name="puzzles_file" id="puzzles_file">')
                 self.wfile.write('<input type="submit" value="Upload">')
                 self.wfile.write('</form>')
+                self.wfile.write('<a href="/admin">Back To Admin</a>')
                 self.wfile.write('</body></html>')
 
         #

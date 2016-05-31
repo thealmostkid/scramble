@@ -5,7 +5,7 @@ import time
 import urlparse
 
 import scramble.engine
-import scramble.scramble
+import scramble.puzzle
 
 SERVER_PORT = 8001
 
@@ -54,18 +54,18 @@ def MakeHandlerClassFromArgv(engine):
         #
         # admin API
         #
-        def dump_scramble(self, scramble, scramble_type, output):
+        def dump_scramble(self, scrambl, scramble_type, output):
             output.write('<tr>')
             output.write('<td>%s</td>' % scramble_type)
-            output.write('<td>%s</td>' % scramble[0])
+            output.write('<td>%s</td>' % scrambl[0])
             output.write('<td>')
-            if len(scramble) > 1:
-                output.write(scramble[1])
+            if len(scrambl) > 1:
+                output.write(scrambl[1])
             output.write('</td>')
 
             output.write('<td>')
-            if len(scramble) > 2:
-                output.write(','.join([str(indx) for indx in scramble[2]]))
+            if len(scrambl) > 2:
+                output.write(','.join([str(indx) for indx in scrambl[2]]))
             output.write('</td>')
 
             output.write('</tr>')
@@ -94,10 +94,10 @@ def MakeHandlerClassFromArgv(engine):
                 for puzzle in engine.puzzle_database:
                     self.wfile.write('<table border=1>')
                     for j in xrange(len(puzzle) - 1):
-                        scramble = puzzle[j]
-                        self.dump_scramble(scramble, 'puzzle', self.wfile)
-                    scramble = puzzle[-1]
-                    self.dump_scramble(scramble, 'mystery', self.wfile)
+                        scrambl = puzzle[j]
+                        self.dump_scramble(scrambl, 'puzzle', self.wfile)
+                    scrambl = puzzle[-1]
+                    self.dump_scramble(scrambl, 'mystery', self.wfile)
                     self.wfile.write('</table>')
                 self.wfile.write('<form action="/admin/puzzles" method="post" enctype="multipart/form-data">')
                 self.wfile.write('<input type="file" name="puzzles_file" id="puzzles_file">')
@@ -243,15 +243,15 @@ def MakeHandlerClassFromArgv(engine):
 
             pid = path_parts[5]
             try:
-                scramble = game.get_scramble(pid)
+                scrambl = game.get_scramble(pid)
             except KeyError:
                 self.send_error(404, 'Unknown scramble "%s"' % pid)
                 return
 
-            values = {'scramble': scramble.scramble,
-                    'solved': scramble.solved,
-                    'hidden': (scramble.pid == 'r0m' and not user.mystery_solver),
-                    'message': scramble.message}
+            values = {'scramble': scrambl.scramble,
+                    'solved': scrambl.solved,
+                    'hidden': (scrambl.pid == 'r0m' and not user.mystery_solver),
+                    'message': scrambl.message}
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -496,7 +496,7 @@ def MakeHandlerClassFromArgv(engine):
             pid = path_parts[3]
 
             try:
-                scramble = game.get_scramble(pid)
+                scrambl = game.get_scramble(pid)
             except KeyError:
                 self.send_error(404, 'Unknown scramble "%s"' % pid)
                 return
@@ -511,12 +511,12 @@ def MakeHandlerClassFromArgv(engine):
             uid = params['uid'][0]
             engine.record_stat(time.time(), 'scramble_guess', pid, uid)
 
-            if scramble.guess(guess):
+            if scrambl.guess(guess):
                 game.solve(pid, uid)
                 engine.record_stat(time.time(), 'scramble_solve', pid, uid)
                 if game.solved:
                     engine.record_stat(time.time(), 'puzzle_solve', game.gid,
-                            game.group)
+                            game.puzzle)
                 guess_message += 'correct'
             else:
                 guess_message += 'incorrect'
@@ -549,14 +549,14 @@ def MakeHandlerClassFromArgv(engine):
             if game.solved:
                 restart = True
             elif game.timer() <= 0:
-                engine.record_stat(time.time(), 'puzzle_expired', game.gid, game.group)
+                engine.record_stat(time.time(), 'puzzle_expired', game.gid, game.puzzle)
                 restart = True
 
             if restart:
                 # load next level
-                game.start_group(game.group + 1)
+                game.start_puzzle(game.puzzle + 1)
                 if not game.completed():
-                    engine.record_stat(game.start, 'puzzle_start', game.gid, game.group)
+                    engine.record_stat(game.start, 'puzzle_start', game.gid, game.puzzle)
                     for user in game.users:
                         engine.record_stat(game.start, 'scramble_start',
                                 user.scramble.pid, user.uid)

@@ -1,4 +1,4 @@
-import scramble.scramble
+import scramble.puzzle
 import time
 
 def game_time_limit():
@@ -26,18 +26,18 @@ class Game(object):
             puzzle = puzzle_database[g]
             for p in xrange(len(puzzle) - 1):
                 parts = puzzle[p]
-                scramble = scramble.scramble.Puzzle('%sp%ds%d' % (gid, g, p),
+                scrambl = scramble.puzzle.Scramble('%sp%ds%d' % (gid, g, p),
                         str(p + 1), parts[0], parts[1])
                 # set indices
                 if len(parts) > 2:
-                    scramble.indices = parts[2]
+                    scrambl.indices = parts[2]
                 if p > 0:
-                    scramble.prev_scramble = scrambles[-1]
-                    scramble.prev_scramble.next_scramble = scramble
-                scrambles.append(scramble)
+                    scrambl.prev_scramble = scrambles[-1]
+                    scrambl.prev_scramble.next_scramble = scrambl
+                scrambles.append(scrambl)
 
             # special mystery scramble
-            mystery = scramble.scramble.Puzzle('%sp%dm' % (gid, g), 'Mystery', puzzle[-1][0], '')
+            mystery = scramble.puzzle.Scramble('%sp%dm' % (gid, g), 'Mystery', puzzle[-1][0], '')
             mystery.prev_scramble = scrambles[-1]
             mystery.prev_scramble.next_scramble = mystery
             scrambles.append(mystery)
@@ -46,8 +46,8 @@ class Game(object):
 
         self.scrambles_index = dict()
         for puzzle in self.puzzles:
-            for scramble in puzzle:
-                self.scrambles_index[scramble.pid] = scramble
+            for scrambl in puzzle:
+                self.scrambles_index[scrambl.pid] = scrambl
 
         # set up game for first puzzle
         self.start_puzzle(0)
@@ -76,11 +76,11 @@ class Game(object):
         return self.users_index[uid]
 
     def solve(self, pid, uid):
-        scramble = self.get_scramble(pid)
-        scramble.solve(uid)
+        scrambl = self.get_scramble(pid)
+        scrambl.solve(uid)
         mystery = self.puzzles[self.puzzle][-1]
-        for index in scramble.indices:
-            mystery.scramble += scramble.value[index - 1]
+        for index in scrambl.indices:
+            mystery.scramble += scrambl.value[index - 1]
         self.solved = True
-        for scramble in self.puzzles[self.puzzle]:
-            self.solved = scramble.solved and self.solved
+        for scrambl in self.puzzles[self.puzzle]:
+            self.solved = scrambl.solved and self.solved

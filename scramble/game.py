@@ -1,23 +1,16 @@
 import scramble.puzzle
 import time
 
-def game_time_limit():
-    # seven minutes
-    return 60 * 7
-
-def select_mystery_solver(user_list):
-    return user_list[0]
-
 class Game(object):
-    def __init__(self, gid, users, puzzle_database):
+    def __init__(self, gid, time_limit, users, puzzle_database):
         self.gid = gid
+        self.time_limit = time_limit
         self.solved = False
 
         self.users = users
         self.users_index = dict()
         for user in self.users:
             self.users_index[user.uid] = user
-        select_mystery_solver(self.users).mystery_solver = True
 
         # load puzzle database
         self.puzzles = list()
@@ -68,7 +61,7 @@ class Game(object):
 
     def timer(self):
         elapsed = int(time.time() - self.start)
-        return game_time_limit() - elapsed
+        return self.time_limit - elapsed
 
     def get_scramble(self, pid):
         return self.scrambles_index[pid]

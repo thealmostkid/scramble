@@ -520,7 +520,6 @@ def MakeHandlerClassFromArgv(engine):
                 guess_message += 'correct'
             else:
                 guess_message += 'incorrect'
-            # TODO: put gid, uid into params
             params['message'] = [guess_message]
             path = ['game', gid, 'user', uid]
             return self.do_GET_game_user(path, params)

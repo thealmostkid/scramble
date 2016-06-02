@@ -250,7 +250,7 @@ def MakeHandlerClassFromArgv(engine):
 
             values = {'scramble': scrambl.scramble,
                     'solved': scrambl.solved,
-                    'hidden': (scrambl.pid == 'r0m' and not user.mystery_solver),
+                    'hidden': (scrambl.mystery and not user.mystery_solver),
                     'message': scrambl.message}
             self.send_response(200)
             self.send_header('Content-type', 'application/json')

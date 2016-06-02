@@ -38,6 +38,7 @@ class Game(object):
 
             # special mystery scramble
             mystery = scramble.puzzle.Scramble('%sp%dm' % (gid, g), 'Mystery', puzzle[-1][0], '')
+            mystery.mystery = True
             mystery.prev_scramble = scrambles[-1]
             mystery.prev_scramble.next_scramble = mystery
             scrambles.append(mystery)

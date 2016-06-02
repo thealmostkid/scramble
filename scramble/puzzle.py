@@ -162,6 +162,7 @@ class Scramble(object):
         self.scramble = scramble
         self.indices = list()
 
+        self.mystery = False
         self.solved = False
         self.message = None
         self.prev_scramble = None

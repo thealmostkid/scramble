@@ -1,0 +1,21 @@
+#!/bin/bash
+echo "CLEAN"
+
+rm -rf *.egg
+rm -rf *.egg-info
+rm -f setuptools*
+rm -f distribute-0.6.14.tar.gz
+
+find . -name "*.pyc" | xargs rm -f
+
+rm -rf build
+rm -rf dist
+rm -rf artifacts
+
+find . -type d -name __pycache__ | xargs rm -rf
+
+rm -rf htmlcov
+rm -f .coverage.*
+rm -f coverage.xml pylint-report.txt
+
+rm -f Berksfile.lock

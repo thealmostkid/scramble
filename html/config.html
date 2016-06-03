@@ -1,0 +1,47 @@
+<html>
+<head>
+<style>
+table {
+    border-collapse: collapse;
+}
+table, th, td {
+    border: 1px solid black;
+}
+</style>
+<script type="text/javascript">
+    var user = undefined;
+    var message = undefined;
+    LOCAL
+</script>
+</head>
+<body>
+<form action="/admin/config" method="post">
+<table>
+<tr><td>Time Limit (Seconds):</td>
+<td>
+<script type="text/javascript">
+        html = '<input type="text" name="time_limit" value="';
+        html += local.time_limit;
+        html += '"';
+        document.write(html);
+</script>
+</td></tr>
+<tr><td>Mystery Solver Selection:</td>
+<td>
+<script type="text/javascript">
+    html = '';
+    for (j = 0; j < local.solvers.length; j++) {
+            html += '<input type="radio" name="solver" value="';
+            html += local.solvers[j];
+            html += '"> ';
+            html += local.solvers[j];
+    }
+    document.write(html);
+</script>
+</td></tr>
+</table>
+<input type="submit" value="Update Config">
+</form>
+<a href="/admin">Back To Admin</a>
+</body></html>
+

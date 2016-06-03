@@ -70,6 +70,7 @@ def MakeHandlerClassFromArgv(engine):
 
             output.write('</tr>')
 
+# GET /admin/
         def do_GET_admin(self, path_parts, params):
             assert(path_parts[0] == 'admin')
             if len(path_parts) == 1:
@@ -105,6 +106,28 @@ def MakeHandlerClassFromArgv(engine):
                 self.wfile.write('</form>')
                 self.wfile.write('<a href="/admin">Back To Admin</a>')
                 self.wfile.write('</body></html>')
+            elif 'config' == cmd:
+                source_file = 'html/config.html'
+                try:
+                    f = open(source_file)
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    for line in f:
+                        if 'LOCAL' in line:
+                            values = {
+                                    'time_limit': engine.time_limit,
+                                    'solvers': ['random', 'last'],
+                                    }
+                            self.wfile.write('var local=%s;\n' % json.dumps(values))
+                        else:
+                            self.wfile.write(line)
+                    f.close()
+                except IOError:
+                    self.send_error(501, 'failed to load %s' % source_file)
+                    return
+            else:
+                self.send_error(404)
 
         #
         # lobby API
@@ -383,6 +406,16 @@ def MakeHandlerClassFromArgv(engine):
                     self.wfile.write('<a href="/admin/puzzles">Back</a>')
                     return
                 parts = ['admin', 'puzzles']
+                return self.do_GET_admin(parts, params)
+            elif cmd == 'config':
+                try:
+                    engine.time_limit = int(params['time_limit'][0])
+                    print 'SOLVER = %s' % params['solver'][0]
+                except Exception as e:
+                    self.send_error(400, 'Invalid configuration')
+                    self.wfile.write('<br><a href="/admin/config">Back</a>')
+                    return
+                parts = ['admin', 'config']
                 return self.do_GET_admin(parts, params)
             else:
                 self.send_error(404, 'Post admin not implemented for %s' % self.path)

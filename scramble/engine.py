@@ -168,6 +168,7 @@ class Engine(object):
         self.stats = list()
         self.puzzle_database = scramble.puzzle.parse(
                 scramble.puzzle.DEFAULT.split('\n'))
+        self.time_limit = 60 * 2
 
     def user(self, uid):
         return self.users[uid]
@@ -194,7 +195,7 @@ class Engine(object):
 
     def _game_time_limit(self):
         # seven minutes
-        return 60 * 2
+        return self.time_limit
 
     def create_game(self, user_list):
         '''Creates a game with the given list of users.

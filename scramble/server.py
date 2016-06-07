@@ -1,9 +1,11 @@
 import BaseHTTPServer
 import cgi
-import urlparse
 import json
+import time
+import urlparse
 
 import scramble.engine
+import scramble.puzzle
 
 SERVER_PORT = 8001
 
@@ -18,18 +20,14 @@ def MakeHandlerClassFromArgv(engine):
 
         def do_GET(self):
             paths = dict()
-            paths['poll'] = self.poll_get
+            paths['admin'] = self.do_GET_admin
             paths['game'] = self.do_GET_game
             paths['lobby'] = self.do_GET_lobby
             paths['user'] = self.do_GET_user
-    
+
             incoming = urlparse.urlparse(self.path)
             qs = urlparse.parse_qs(incoming.query)
-            print 'qs = %s' % qs
-    
             path_parts = incoming.path.split('/')
-            print 'PARTS %s' % path_parts
-            print 'LEN = %d' % len(path_parts)
             while len(path_parts) > 0 and path_parts[0] == '':
                 path_parts.pop(0)
 
@@ -52,6 +50,84 @@ def MakeHandlerClassFromArgv(engine):
             else:
                 self.send_error(500, 'Get not implemented for %s' % incoming.path)
                 return
+
+        #
+        # admin API
+        #
+        def dump_scramble(self, scrambl, scramble_type, output):
+            output.write('<tr>')
+            output.write('<td>%s</td>' % scramble_type)
+            output.write('<td>%s</td>' % scrambl[0])
+            output.write('<td>')
+            if len(scrambl) > 1:
+                output.write(scrambl[1])
+            output.write('</td>')
+
+            output.write('<td>')
+            if len(scrambl) > 2:
+                output.write(','.join([str(indx) for indx in scrambl[2]]))
+            output.write('</td>')
+
+            output.write('</tr>')
+
+# GET /admin/
+        def do_GET_admin(self, path_parts, params):
+            assert(path_parts[0] == 'admin')
+            if len(path_parts) == 1:
+                path = ['admin.html']
+                self._html(path, params)
+                return
+
+            cmd = path_parts[1]
+            if 'stats.csv' == cmd:
+                self.send_response(200)
+                self.send_header('Content-type', 'text/csv')
+                self.end_headers()
+                self.wfile.write('timestamp,event,value1,value2\n')
+                for stat in engine.stats:
+                    self.wfile.write('%s\n' % ','.join(stat))
+                return
+            elif 'puzzles' == cmd:
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write('<html><body>')
+                for puzzle in engine.puzzle_database:
+                    self.wfile.write('<table border=1>')
+                    for j in xrange(len(puzzle) - 1):
+                        scrambl = puzzle[j]
+                        self.dump_scramble(scrambl, 'puzzle', self.wfile)
+                    scrambl = puzzle[-1]
+                    self.dump_scramble(scrambl, 'mystery', self.wfile)
+                    self.wfile.write('</table>')
+                self.wfile.write('<form action="/admin/puzzles" method="post" enctype="multipart/form-data">')
+                self.wfile.write('<input type="file" name="puzzles_file" id="puzzles_file">')
+                self.wfile.write('<input type="submit" value="Upload">')
+                self.wfile.write('</form>')
+                self.wfile.write('<a href="/admin">Back To Admin</a>')
+                self.wfile.write('</body></html>')
+            elif 'config' == cmd:
+                source_file = 'html/config.html'
+                try:
+                    f = open(source_file)
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    for line in f:
+                        if 'LOCAL' in line:
+                            values = {
+                                    'time_limit': engine.time_limit,
+                                    'solvers': ['random', 'last'],
+                                    }
+                            self.wfile.write('var local=%s;\n' % json.dumps(values))
+                        else:
+                            self.wfile.write(line)
+                    f.close()
+                except IOError:
+                    self.send_error(501, 'failed to load %s' % source_file)
+                    return
+            else:
+                self.send_error(404)
 
         #
         # lobby API
@@ -108,35 +184,6 @@ def MakeHandlerClassFromArgv(engine):
         #
         # game API
         #
-        def do_GET_game_status(self, path_parts, params):
-            gid = path_parts[1]
-            try:
-                game = engine.game(gid)
-            except KeyError:
-                self.send_error(404, 'Cannot find information for game id %s' % gid)
-                return
-
-            # list of each user
-            time_remaining = game.timer()
-            state = None
-            if game.solved:
-                state = 'solved'
-            elif time_remaining <= 0:
-                state = 'expired'
-            values = {'timer': time_remaining if time_remaining > 0 else 0,
-                    'state': state}
-            users = list()
-            for user in game.users:
-                users.append({'name': user.uid,
-                    'mystery': user.mystery_solver,
-                    'puzzle': user.puzzle.pretty_name})
-            values['users'] = users
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write('%s' % json.dumps(values))
-            return
-
 # GET /game/<gid> - get game status (json)
         def do_GET_game(self, path_parts, params):
             '''
@@ -164,16 +211,46 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404)
             return
 
-# GET /game/<gid>/puzzle/<pid>
-        def do_GET_game_puzzle(self, path_parts, params):
+# GET /game/<gid>
+        def do_GET_game_status(self, path_parts, params):
+            gid = path_parts[1]
+            try:
+                game = engine.game(gid)
+            except KeyError:
+                self.send_error(404, 'Cannot find information for game id %s' % gid)
+                return
+
+            # list of each user
+            time_remaining = game.timer()
+            state = None
+            if game.solved:
+                state = 'solved'
+            elif time_remaining <= 0:
+                state = 'expired'
+            values = {'timer': time_remaining if time_remaining > 0 else 0,
+                    'state': state}
+            users = list()
+            for user in game.users:
+                users.append({'name': user.uid,
+                    'mystery': user.mystery_solver,
+                    'scramble': user.scramble.pretty_name})
+            values['users'] = users
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write('%s' % json.dumps(values))
+            return
+
+# GET /game/<gid>/scramble/<pid>
+        def do_GET_game_scramble(self, path_parts, params):
             '''
-            GET endpoint for /game/<gid>/user/<uid>/puzzle/<pid>
+            GET endpoint for /game/<gid>/user/<uid>/scramble/<pid>
             '''
             if len(path_parts) < 6:
                 self.send_error(404, 'Invalid request for "%s"' % '/'.join(path_parts))
                 return
 
-            assert(path_parts[4] == 'puzzle')
+            assert(path_parts[4] == 'scramble')
             gid = path_parts[1]
             try:
                 game = engine.game(gid)
@@ -189,15 +266,15 @@ def MakeHandlerClassFromArgv(engine):
 
             pid = path_parts[5]
             try:
-                puzzle = game.get_puzzle(pid)
+                scrambl = game.get_scramble(pid)
             except KeyError:
-                self.send_error(404, 'Unknown puzzle "%s"' % pid)
+                self.send_error(404, 'Unknown scramble "%s"' % pid)
                 return
 
-            values = {'scramble': puzzle.scramble,
-                    'solved': puzzle.solved,
-                    'hidden': (puzzle.pid == 'r0m' and not user.mystery_solver),
-                    'message': puzzle.message}
+            values = {'scramble': scrambl.scramble,
+                    'solved': scrambl.solved,
+                    'hidden': (scrambl.mystery and not user.mystery_solver),
+                    'message': scrambl.message}
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -217,8 +294,8 @@ def MakeHandlerClassFromArgv(engine):
             assert(path_parts[2] == 'user')
             if len(path_parts) > 4:
                 action = path_parts[4]
-                if action == 'puzzle':
-                    return self.do_GET_game_puzzle(path_parts, params)
+                if action == 'scramble':
+                    return self.do_GET_game_scramble(path_parts, params)
                 else:
                     self.send_error(404, 'Invalid action "%s"' %
                             '/'.join(path_parts))
@@ -237,7 +314,11 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown userid "%s"' % uid)
                 return
 
-            source_file = 'html/puzzle.html'
+            if not game.completed():
+                source_file = 'html/scramble.html'
+            else:
+                source_file = 'html/credits.html'
+
             try:
                 f = open(source_file)
                 self.send_response(200)
@@ -246,19 +327,19 @@ def MakeHandlerClassFromArgv(engine):
                 for line in f:
                     if 'LOCAL' in line:
                         values = {
-                                'pid': user.puzzle.pid,
-                                'puzzle_name': user.puzzle.pretty_name,
+                                'pid': user.scramble.pid,
+                                'scramble_name': user.scramble.pretty_name,
                                 'uid': user.uid,
                                 'gid': game.gid,
-                                'puzzle_len': len(user.puzzle.value),
-                                'puzzle_indices': user.puzzle.indices
+                                'scramble_len': len(user.scramble.value),
+                                'scramble_indices': user.scramble.indices
                                 }
-                        if user.puzzle.next_puzzle is not None:
-                            values['next'] = user.puzzle.next_puzzle.pid
+                        if user.scramble.next_scramble is not None:
+                            values['next'] = user.scramble.next_scramble.pid
                         else:
                             values['next'] = None
-                        if user.puzzle.prev_puzzle is not None:
-                            values['previous'] = user.puzzle.prev_puzzle.pid
+                        if user.scramble.prev_scramble is not None:
+                            values['previous'] = user.scramble.prev_scramble.pid
                         else:
                             values['previous'] = None
 
@@ -272,20 +353,21 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(501, 'failed to load %s' % source_file)
                 return
             return
-    
+
         #
         # POST
         #
         def do_POST(self):
             paths = dict()
+            paths['admin'] = self.do_POST_admin
             paths['game'] = self.do_POST_game
             paths['user'] = self.do_POST_user
-    
+
             incoming = urlparse.urlparse(self.path)
             path_parts = incoming.path.split('/')
             while path_parts[0] == '':
                 path_parts.pop(0)
-    
+
             form = cgi.FieldStorage(
                     fp=self.rfile,
                     headers=self.headers,
@@ -298,12 +380,46 @@ def MakeHandlerClassFromArgv(engine):
                 if type(value) != type(list()):
                     value = [value]
                 qs[key] = value
-    
+
             if path_parts[0] in paths:
                 return paths[path_parts[0]](path_parts, qs)
             else:
                 self.send_error(404, 'Post not implemented for %s' % self.path)
             return
+
+        #
+        # admin API
+        #
+        def do_POST_admin(self, path_parts, params):
+            assert(path_parts[0] == 'admin')
+            if len(path_parts) == 1:
+                parts = ['admin']
+                return self.do_GET_admin(parts, params)
+
+            cmd = path_parts[1]
+            if cmd == 'puzzles':
+                try:
+                    engine.puzzle_database = scramble.puzzle.parse(params['puzzles_file'][0].split('\n'))
+                except Exception as e:
+                    self.send_error(400, 'Invalid puzzle list')
+                    self.wfile.write('<h3>File Error:</h3><p><i>%s</i></p>' % e)
+                    self.wfile.write('<a href="/admin/puzzles">Back</a>')
+                    return
+                parts = ['admin', 'puzzles']
+                return self.do_GET_admin(parts, params)
+            elif cmd == 'config':
+                try:
+                    engine.time_limit = int(params['time_limit'][0])
+                    print 'SOLVER = %s' % params['solver'][0]
+                except Exception as e:
+                    self.send_error(400, 'Invalid configuration')
+                    self.wfile.write('<br><a href="/admin/config">Back</a>')
+                    return
+                parts = ['admin', 'config']
+                return self.do_GET_admin(parts, params)
+            else:
+                self.send_error(404, 'Post admin not implemented for %s' % self.path)
+                return
 
 # POST /user/create - make a new user
         def do_POST_user(self, path_parts, params):
@@ -315,6 +431,7 @@ def MakeHandlerClassFromArgv(engine):
                     return
                 real_name = params['real-name'][0]
                 user = engine.create_user(real_name)
+                engine.record_stat(time.time(), 'user_create', real_name, user.uid)
                 engine.poll_for_new_game()
                 path = ['lobby', user.uid]
                 return self.do_GET_lobby(path, params)
@@ -332,16 +449,13 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404)
                 return
 
-            if path_parts[1] == 'create':
-                return self.do_POST_game_create(path_parts, params)
-
             if len(path_parts) < 3:
                 self.send_error(404)
                 return
 
             command = path_parts[2]
-            if 'puzzle' == command:
-                return self.do_POST_game_puzzle(path_parts, params)
+            if 'scramble' == command:
+                return self.do_POST_game_scramble(path_parts, params)
             elif 'user' == command:
                 return self.do_POST_game_user(path_parts, params)
             elif 'advance' == command:
@@ -350,7 +464,7 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404)
                 return
 
-# POST /game/<gid>/user/<uid>?action=next_puzzle - change user puzzle
+# POST /game/<gid>/user/<uid>?action=next_scramble - change user scramble
         def do_POST_game_user(self, path_parts, params):
             if len(path_parts) < 4:
                 self.send_error(404)
@@ -359,10 +473,10 @@ def MakeHandlerClassFromArgv(engine):
             assert(path_parts[0] == 'game')
             assert(path_parts[2] == 'user')
 
-            if 'puzzle' not in params:
+            if 'scramble' not in params:
                 self.send_error(404)
                 return
-            puzzle_change = params['puzzle'][0]
+            scramble_change = params['scramble'][0]
 
             gid = path_parts[1]
             try:
@@ -377,27 +491,29 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown userid "%s"' % uid)
                 return
 
-            if puzzle_change == 'next':
-                if user.puzzle.next_puzzle is not None:
-                    user.puzzle = user.puzzle.next_puzzle
-            elif puzzle_change == 'prev':
-                if user.puzzle.prev_puzzle is not None:
-                    user.puzzle = user.puzzle.prev_puzzle
+            if scramble_change == 'next':
+                if user.scramble.next_scramble is not None:
+                    user.scramble = user.scramble.next_scramble
+            elif scramble_change == 'prev':
+                if user.scramble.prev_scramble is not None:
+                    user.scramble = user.scramble.prev_scramble
             else:
                 self.send_error(404,
-                        'Unknown puzzle action: "%s"' % puzzle_change)
+                        'Unknown scramble action: "%s"' % scramble_change)
                 return
             path = ['game', gid, 'user', uid]
+            engine.record_stat(time.time(), 'scramble_start', user.scramble.pid,
+                    user.uid)
             return self.do_GET_game_user(path, params)
 
-# POST /game/<gid>/puzzle/<pid> - guess puzzle
-        def do_POST_game_puzzle(self, path_parts, params):
+# POST /game/<gid>/scramble/<pid> - guess scramble
+        def do_POST_game_scramble(self, path_parts, params):
             if len(path_parts) < 4:
                 self.send_error(404)
                 return
 
             assert(path_parts[0] == 'game')
-            assert(path_parts[2] == 'puzzle')
+            assert(path_parts[2] == 'scramble')
 
             if 'uid' not in params:
                 self.send_error(404, 'Post request missing "uid"')
@@ -413,9 +529,9 @@ def MakeHandlerClassFromArgv(engine):
             pid = path_parts[3]
 
             try:
-                puzzle = game.get_puzzle(pid)
+                scrambl = game.get_scramble(pid)
             except KeyError:
-                self.send_error(404, 'Unknown puzzle "%s"' % pid)
+                self.send_error(404, 'Unknown scramble "%s"' % pid)
                 return
 
             keys = sorted([key for key in params.keys() if key.startswith('l')])
@@ -426,17 +542,22 @@ def MakeHandlerClassFromArgv(engine):
             guess_message = 'Guess "%s" is ' % guess
 
             uid = params['uid'][0]
-            if puzzle.guess(guess):
+            engine.record_stat(time.time(), 'scramble_guess', pid, uid)
+
+            if scrambl.guess(guess):
                 game.solve(pid, uid)
+                engine.record_stat(time.time(), 'scramble_solve', pid, uid)
+                if game.solved:
+                    engine.record_stat(time.time(), 'puzzle_solve', game.gid,
+                            game.puzzle)
                 guess_message += 'correct'
             else:
                 guess_message += 'incorrect'
-            # TODO: put gid, uid into params
             params['message'] = [guess_message]
             path = ['game', gid, 'user', uid]
             return self.do_GET_game_user(path, params)
 
-   # POST /game/<gid>/advance - guess puzzle
+   # POST /game/<gid>/advance - guess scramble
         def do_POST_game_advance(self, path_parts, params):
             if len(path_parts) < 3:
                 self.send_error(404)
@@ -456,18 +577,26 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown game id %s' % gid)
                 return
 
-            game.start_group(game.group + 1)
+            restart = False
+            if game.solved:
+                restart = True
+            elif game.timer() <= 0:
+                engine.record_stat(time.time(), 'puzzle_expired', game.gid, game.puzzle)
+                restart = True
+
+            if restart:
+                # load next level
+                game.start_puzzle(game.puzzle + 1)
+                if not game.completed():
+                    engine.record_stat(game.start, 'puzzle_start', game.gid, game.puzzle)
+                    for user in game.users:
+                        engine.record_stat(game.start, 'scramble_start',
+                                user.scramble.pid, user.uid)
+
             uid = params['uid'][0]
             path = ['game', gid, 'user', uid]
             return self.do_GET_game_user(path, params)
 
-        def poll_get(self, path_parts, params):
-            self.send_response(200)
-            self.send_header('Content-type',    'application/json')
-            self.end_headers()
-            self.wfile.write('[1,2]')
-            return
-    
         def load_js(self, url, params):
             f = open('js/%s' % self.path)
             self.send_response(200)
@@ -476,7 +605,7 @@ def MakeHandlerClassFromArgv(engine):
             self.wfile.write(f.read())
             f.close()
             return
-    
+
         def _html(self, path_parts, params):
             f = open('html/%s' % path_parts[-1])
             self.send_response(200)

@@ -16,13 +16,31 @@
 </style>
 <script type="text/javascript" src="/jquery-1.12.2.min.js"></script>
 <script type="text/javascript">
-	var user = undefined;
-	var message = undefined;
-	LOCAL
+    var user = undefined;
+    var message = undefined;
+    LOCAL
 
-	(function activity() {
-		$.getJSON('/game/' + local.gid)
-		.done(function(data) {
+    function pad(n){return n<10 ? '0'+n : n}
+
+    function MoveGuessCursor(textBox) {
+            pos = parseInt(textBox.name.slice(-1));
+            if (textBox.value === "") {
+                    // do nothing if text is empty (delete?)
+                    return;
+            }
+            if (pos < (local.scramble_len - 1)) {
+                    id = "l" + (pos + 1);
+                    next = document.getElementById(id);
+                    next.focus()
+            } else {
+                    submit = document.getElementById('guess.submit');
+                    submit.focus()
+            }
+    }
+
+    (function activity() {
+        $.getJSON('/game/' + local.gid)
+        .done(function(data) {
                 status_html = '<td align=center colspan=3>';
                 status_html += '<table>';
            for (i = 0; i < data.users.length; i++) {
@@ -31,13 +49,18 @@
                 if (data.users[i].mystery) {
                     status_html += ' <font color="red">(mystery)</font>';
                 }
-                status_html += ' working on scramble <i>' + data.users[i].puzzle + '</i>';
+                status_html += ' working on scramble <i>' + data.users[i].scramble + '</i>';
                 status_html += '</td></tr>';
             }
             status_html += '</table></td>';
-			document.getElementById('game.status').innerHTML = status_html;
+            document.getElementById('game.status').innerHTML = status_html;
 
-			document.getElementById('game.time').innerHTML = "Time remaining: " + data.timer;
+            time_left = new Date(data.timer * 1000);
+            time_string = "Time remaining: ";
+            time_string += pad(time_left.getUTCHours()) + ":";
+            time_string += pad(time_left.getUTCMinutes()) + ":";
+            time_string += pad(time_left.getUTCSeconds());
+            document.getElementById('game.time').innerHTML = time_string;
             if (data.state) {
                 popup = document.getElementById("popup");
                 html = '<p>' + data.state + '</p>';
@@ -55,8 +78,8 @@
             } else {
                 document.getElementById("popup").style.visibility = "hidden";
                 document.getElementById("main").style.opacity = "1.0";
+			    setTimeout(activity, 1000);
             }
-			setTimeout(activity, 1000);
 		})
 		.fail(function() {
 			document.getElementById('game.status').innerHTML = "<p>Error</p>";
@@ -66,8 +89,8 @@
 	})();
 
 
-	(function puzzle() {
-		$.getJSON('/game/' + local.gid + '/user/' + local.uid + '/puzzle/' + local.pid)
+    (function scramble() {
+		$.getJSON('/game/' + local.gid + '/user/' + local.uid + '/scramble/' + local.pid)
 		.done(function(data) {
 			scramble_html = '';
 			for (i = 0; i < data.scramble.length; i++) {
@@ -91,12 +114,12 @@
                 state_html = '<td> </td><td align=center><h3>';
                 state_html += data.message;
                 state_html += '</h3></td>';
-				document.getElementById('puzzle.state').innerHTML = state_html;
+				document.getElementById('scramble.state').innerHTML = state_html;
             }
-			setTimeout(puzzle, 1000);
+			setTimeout(scramble, 1000);
 		})
 		.fail(function() {
-			document.getElementById('game.scramble').innerHTML = "<font color=red>Error Loading Puzzle</font>";
+			document.getElementById('game.scramble').innerHTML = "<font color=red>Error Loading Scramble</font>";
 		})
 		.always(function() {
 		}) ;
@@ -133,7 +156,7 @@
 
     <div id=wrapper>
     <tr>
-      <td align=center id="prev_puzzle">
+      <td align=center id="prev_scramble">
         <script type="text/javascript">
 	  html = '<form action="/game/'
 	  html += local.gid
@@ -142,12 +165,12 @@
 	  html += '" method="post">';
 	  document.write(html);
         </script>
-        <input type="hidden" name="puzzle" value="prev">
+        <input type="hidden" name="scramble" value="prev">
         <input type="submit" value="previous">
         </form>
       </td>
       <td> </td>
-      <td align=center id="next_puzzle">
+      <td align=center id="next_scramble">
         <script type="text/javascript">
 	  html = '<form action="/game/'
 	  html += local.gid
@@ -156,7 +179,7 @@
 	  html += '" method="post">';
 	  document.write(html);
         </script>
-        <input type="hidden" name="puzzle" value="next">
+        <input type="hidden" name="scramble" value="next">
         <input type="submit" value="next">
         </form>
 
@@ -176,7 +199,7 @@
     <tr>
     	<script type="text/javascript">
         	html = "<td align=center><h3>Scramble ";
-		html += local.puzzle_name;
+		html += local.scramble_name;
 		html += ": </h3></td>";
 		document.write(html)
 	</script>
@@ -188,7 +211,7 @@
     
     </div>
     
-    <!-- spacing between puzzle and solution input -->
+    <!-- spacing between scramble and solution input -->
     <div id=wrapper>
     <tr >
       <td height=10></td>
@@ -198,19 +221,27 @@
     <!-- solution display -->
     <div id=wrapper>
     <tr id="game.guess">
-      <!-- TODO: move between boxes after typing. -->
       <td align=center valign=top><h3>Your Guess:</h3></td>
       <td align=center valign=top id="game.guess_box">
       <script type="text/javascript">
-        document.write('<form action="/game/' + local.gid + '/puzzle/' + local.pid + '" method="post">');
+        document.write('<form action="/game/' + local.gid + '/scramble/' + local.pid + '" method="post">');
         guess_html = '';
-        for (i = 0; i < local.puzzle_len; i++) {
-                guess_html += '<input type="text"';
-                for (j = 0; j < local.puzzle_indices.length; j++) {
-                        if (i == (local.puzzle_indices[j] - 1)) {
-                                guess_html += ' id="highlight"';
+        for (i = 0; i < local.scramble_len; i++) {
+                highlighted = false;
+                for (j = 0; j < local.scramble_indices.length; j++) {
+                        if (i == (local.scramble_indices[j] - 1)) {
+                                highlighted = true;
                         }
                 }
+                if (highlighted) {
+                        guess_html += '<input type="text"';
+                        // TODO: read background from style sheet
+                        guess_html += ' style="background:yellow;"';
+                } else {
+                        guess_html += '<input type="text"';
+                }
+                guess_html += ' id="l' + i + '"';
+                guess_html += ' oninput="MoveGuessCursor(this)"';
                 guess_html += ' name="l' + i + '"';
                 guess_html += ' maxlength=1 size=1>';
         }
@@ -218,11 +249,11 @@
         document.write('<input type="hidden" name="uid" value="' + local.uid + '">');
       </script>
       <br><br>
-      <input type="submit" value="Submit">
+      <input type="submit" value="Submit" id="guess.submit">
       </form>
       </td>
     </tr>
-    <tr id="puzzle.state">
+    <tr id="scramble.state">
     </tr>
     <br>
     </div>
@@ -250,14 +281,14 @@
 
 <script type="text/javascript">
     if (local.previous != null) {
-        document.getElementById("prev_puzzle").style.visibility = "visible";
+        document.getElementById("prev_scramble").style.visibility = "visible";
     } else {
-        document.getElementById("prev_puzzle").style.visibility = "hidden";
+        document.getElementById("prev_scramble").style.visibility = "hidden";
     }
     if (local.next) {
-        document.getElementById("next_puzzle").style.visibility = "visible";
+        document.getElementById("next_scramble").style.visibility = "visible";
     } else {
-        document.getElementById("next_puzzle").style.visibility = "hidden";
+        document.getElementById("next_scramble").style.visibility = "hidden";
     }
 </script>
 

@@ -2,11 +2,12 @@
 import scramble.server
 import scramble.__version
 import socket
+import sys
 import threading
 import Tkinter
 
 def shutdown():
-    exit()
+    sys.exit()
 
 def gui():
     root = Tkinter.Tk()

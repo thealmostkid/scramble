@@ -1,4 +1,5 @@
 import random
+import time
 
 import scramble.game
 import scramble.user
@@ -164,6 +165,10 @@ class Engine(object):
     def __init__(self):
         self.games = dict()
         self.users = dict()
+        self.stats = list()
+        self.puzzle_database = scramble.puzzle.parse(
+                scramble.puzzle.DEFAULT.split('\n'))
+        self.time_limit = 60 * 2
 
     def user(self, uid):
         return self.users[uid]
@@ -184,6 +189,13 @@ class Engine(object):
 
     def game(self, gid):
         return self.games[gid]
+
+    def _select_mystery_solver(self, user_list):
+        return user_list[0]
+
+    def _game_time_limit(self):
+        # seven minutes
+        return self.time_limit
 
     def create_game(self, user_list):
         '''Creates a game with the given list of users.
@@ -209,8 +221,19 @@ class Engine(object):
             indx += 1
 
         gid = '%s%d' % (GID_PREFIX, indx)
-        game = scramble.game.Game(gid, user_list)
+        game = scramble.game.Game(gid, self._game_time_limit(), user_list,
+                self.puzzle_database)
         self.games[gid] = game
         for user in user_list:
             user.game = game
+        self._select_mystery_solver(user_list).mystery_solver = True
+
+        self.record_stat(game.start, 'puzzle_start', game.gid, game.puzzle)
+        for user in game.users:
+            self.record_stat(game.start, 'scramble_start', user.scramble.pid,
+                    user.uid)
+
         return game
+
+    def record_stat(self, timestamp, event_name, item, value):
+        self.stats.append(['%d' % timestamp, str(event_name), str(item), str(value)])

@@ -10,14 +10,6 @@ scramble WALNUT AWLUTN 2
 scramble PENCIL CILNEP
 scramble STYLE TESYL
 scramble MELODY DYLOME
-mystery AIRWAY
-puzzle
-scramble DRAWN DNRAW 2,3,4
-scramble WALNUT AWLUTN 2
-scramble PENCIL CILNEP 5
-scramble STYLE TESYL 3
-scramble IRONY INROY
-scramble MELODY DYLOME
 mystery AIRWAY'''
 
 def parse(lines):

@@ -46,7 +46,8 @@ extra_options['plist'] = {
         'CFBundleIdentifier': "com.ramonat.scramble",
         'CFBundleVersion': VERSION,
         'CFBundleShortVersionString': VERSION,
-        'NSHumanReadableCopyright': u"Copyright © 2015, Ramonat, All Rights Reserved"
+        'NSHumanReadableCopyright': u"Copyright © 2015, Ramonat, All Rights Reserved",
+        'LSPrefersPPC': True,
     }
 
 setup(

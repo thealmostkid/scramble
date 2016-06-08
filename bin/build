@@ -11,3 +11,5 @@ rm v_installer.cfg
 
 # mac app
 python setup.py py2app
+
+cp puzzles.txt dist/

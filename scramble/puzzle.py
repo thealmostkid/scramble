@@ -20,14 +20,6 @@ scramble IRONY INROY
 scramble MELODY DYLOME
 mystery AIRWAY'''
 
-DEFAULT = '''
-puzzle
-scramble DRAWN DNRAW 2,3,4
-mystery AIRWAY
-puzzle
-scramble WALNUT AWLUTN 2
-mystery AIRWAY'''
-
 def parse(lines):
     puzzles = list()
     current_puzzle = None

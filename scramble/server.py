@@ -92,6 +92,7 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 self.wfile.write('<html><body>')
+                self.wfile.write('<a href="/admin">Back To Admin</a>')
                 for puzzle in engine.puzzle_database:
                     self.wfile.write('<table border=1>')
                     for j in xrange(len(puzzle) - 1):
@@ -117,7 +118,11 @@ def MakeHandlerClassFromArgv(engine):
                         if 'LOCAL' in line:
                             values = {
                                     'time_limit': engine.time_limit,
-                                    'solvers': ['random', 'last'],
+                                    'group_size': 3,
+                                    'game_count': 0,
+                                    'survey': engine.survey_url,
+                                    # TODO: selected?
+                                    'solvers': ['random', 'rotate', 'high_earner'],
                                     }
                             self.wfile.write('var local=%s;\n' % json.dumps(values))
                         else:
@@ -126,6 +131,71 @@ def MakeHandlerClassFromArgv(engine):
                 except IOError:
                     self.send_error(501, 'failed to load %s' % source_file)
                     return
+            elif 'status' == cmd:
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write('<html><body>')
+                self.wfile.write('<a href="/admin">Back To Admin</a>')
+                self.wfile.write('<h1>Active games</h1>')
+                self.wfile.write('<table border=1>')
+
+                def dump_user(user, output):
+                    output.write('<tr>')
+                    output.write('<td>%s</td>' % user.uid)
+                    output.write('<td>%s</td>' % user.real_name)
+                    if user.scramble is not None:
+                        output.write('<td>%s</td>' % user.scramble.pid)
+                    else:
+                        output.write('<td>None</td>')
+                    output.write('<td>%s</td>' % user.mystery_solver)
+                    output.write('</tr>')
+
+                # active games
+                for game in engine.games.values():
+                    self.wfile.write('<tr>')
+                    self.wfile.write('<th>Game %s (seconds remaining: %d)</th>' % (game.gid, game.timer()))
+                    self.wfile.write('</tr>')
+
+                    self.wfile.write('<tr><td>')
+                    self.wfile.write('<table border=2>')
+                    self.wfile.write('<tr><th>user</th><th>name</th><th>Scramble</th><th>mystery</th></tr>')
+                    # users
+                    for user in game.users:
+                        dump_user(user, self.wfile)
+                    self.wfile.write('</table>')
+                    self.wfile.write('</td></tr>')
+
+                    # scrambles
+                    self.wfile.write('<tr><td>')
+                    self.wfile.write('<table border=2>')
+                    for i, puzzle in enumerate(game.puzzles):
+                        self.wfile.write('<tr><th>Puzzle %s</th></tr>' % i)
+                        self.wfile.write('<tr><th>scramble</th><th>name</th><th>mystery</th><th>solved</th></tr>')
+                        for scramble in puzzle:
+                            self.wfile.write('<tr>')
+                            self.wfile.write('<td>%s</td>' % scramble.pid)
+                            self.wfile.write('<td>%s</td>' % scramble.pretty_name)
+                            self.wfile.write('<td>%s</td>' % scramble.mystery)
+                            self.wfile.write('<td>%s</td>' % scramble.solved)
+                            self.wfile.write('</tr>')
+                    self.wfile.write('</table>')
+                    self.wfile.write('</td></tr>')
+
+                self.wfile.write('</table>')
+
+                # inactive users
+                self.wfile.write('<h1>Waiting Users</h1>')
+                self.wfile.write('<table border=1>')
+                self.wfile.write('<tr><th>id</th><th>name</th><th>Scramble</th><th>mystery</th></tr>')
+                for user in engine.users.values():
+                    if user.game is None:
+                        dump_user(user, self.wfile)
+                self.wfile.write('</table>')
+
+                self.wfile.write('<br>')
+                self.wfile.write('<a href="/admin">Back To Admin</a>')
+                self.wfile.write('</body></html>')
             else:
                 self.send_error(404)
 
@@ -224,9 +294,9 @@ def MakeHandlerClassFromArgv(engine):
             time_remaining = game.timer()
             state = None
             if game.solved:
-                state = 'solved'
+                state = 'All Scrambles Solved!  Beginning next puzzle set.'
             elif time_remaining <= 0:
-                state = 'expired'
+                state = 'Time expired.  Beginning next puzzle set.'
             values = {'timer': time_remaining if time_remaining > 0 else 0,
                     'state': state}
             users = list()
@@ -314,6 +384,10 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown userid "%s"' % uid)
                 return
 
+            message = None
+            if 'message' in params:
+                message = params['message']
+
             if not game.completed():
                 source_file = 'html/scramble.html'
             else:
@@ -332,7 +406,9 @@ def MakeHandlerClassFromArgv(engine):
                                 'uid': user.uid,
                                 'gid': game.gid,
                                 'scramble_len': len(user.scramble.value),
-                                'scramble_indices': user.scramble.indices
+                                'scramble_indices': user.scramble.indices,
+                                'url': engine.survey_url,
+                                'message': message,
                                 }
                         if user.scramble.next_scramble is not None:
                             values['next'] = user.scramble.next_scramble.pid
@@ -409,10 +485,15 @@ def MakeHandlerClassFromArgv(engine):
                 return self.do_GET_admin(parts, params)
             elif cmd == 'config':
                 try:
+                    # TODO: clean up error handling
                     engine.time_limit = int(params['time_limit'][0])
+                    engine.required_user_count = int(params['group_size'][0])
+                    engine.survey_url = params['survey'][0]
+                    print 'GAME COUNT = %d' % int(params['game_count'][0])
                     print 'SOLVER = %s' % params['solver'][0]
                 except Exception as e:
                     self.send_error(400, 'Invalid configuration')
+                    self.wfile.write('<h3>Error:</h3><p><i>%s</i></p>' % e)
                     self.wfile.write('<br><a href="/admin/config">Back</a>')
                     return
                 parts = ['admin', 'config']
@@ -634,7 +715,7 @@ def run(server_class=BaseHTTPServer.HTTPServer,
 
 def main():
     engine = scramble.engine.Engine()
-    for i in xrange(scramble.engine.REQUIRED_USER_COUNT):
+    for i in xrange(engine.required_user_count):
         engine.create_user('faker')
     engine.poll_for_new_game()
     HandlerClass = MakeHandlerClassFromArgv(engine)

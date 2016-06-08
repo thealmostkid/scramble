@@ -4,7 +4,6 @@ import time
 import scramble.game
 import scramble.user
 
-REQUIRED_USER_COUNT = 3
 GID_PREFIX = 'g'
 
 adjectives = [
@@ -169,6 +168,8 @@ class Engine(object):
         self.puzzle_database = scramble.puzzle.parse(
                 scramble.puzzle.DEFAULT.split('\n'))
         self.time_limit = 60 * 2
+        self.required_user_count = 3
+        self.survey_url = 'http://localhost/'
 
     def user(self, uid):
         return self.users[uid]
@@ -183,8 +184,8 @@ class Engine(object):
     def poll_for_new_game(self):
         pending_users = [user for (uid, user) in self.users.items() if
                 user.game is None]
-        if len(pending_users) >= REQUIRED_USER_COUNT:
-            self.create_game(pending_users[0:REQUIRED_USER_COUNT])
+        if len(pending_users) >= self.required_user_count:
+            self.create_game(pending_users[0:self.required_user_count])
             self.poll_for_new_game()
 
     def game(self, gid):
@@ -207,9 +208,9 @@ class Engine(object):
             ValueError - if a user is already in a list.
             ValueError - if the user_list is too small.
         '''
-        if len(user_list) != REQUIRED_USER_COUNT:
+        if len(user_list) != self.required_user_count:
             raise ValueError('Wrong number of users for a game (got %d, expected %d)' %
-                    (len(user_list), REQUIRED_USER_COUNT))
+                    (len(user_list), self.required_user_count))
 
         for user in user_list:
             if user.game is not None:

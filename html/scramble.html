@@ -22,6 +22,28 @@
 
     function pad(n){return n<10 ? '0'+n : n}
 
+    function popUp(message, visible) {
+            html = '<p>' + message + '</p>';
+            html += '<form action = "/game/';
+            html += local.gid;
+            html += '/advance" method="post">';
+            html += '<input type="hidden" name="uid" value="';
+            html += local.uid;
+            html += '">';
+            html += '<input type="submit" value="Continue">';
+            html += '</form>';
+
+            popup = document.getElementById("popup");
+            popup.innerHTML = html;
+            if (visible) {
+                popup.style.visibility = "visible";
+                document.getElementById("main").style.opacity = "0.1";
+            } else {
+                popup.style.visibility = "hidden";
+                document.getElementById("main").style.opacity = "1.0";
+            }
+    }
+
     function MoveGuessCursor(textBox) {
             pos = parseInt(textBox.name.slice(-1));
             if (textBox.value === "") {
@@ -62,22 +84,11 @@
             time_string += pad(time_left.getUTCSeconds());
             document.getElementById('game.time').innerHTML = time_string;
             if (data.state) {
-                popup = document.getElementById("popup");
-                html = '<p>' + data.state + '</p>';
-                html += '<form action = "/game/';
-                html += local.gid;
-                html += '/advance" method="post">';
-                html += '<input type="hidden" name="uid" value="';
-                html += local.uid;
-                html += '">';
-                html += '<input type="submit" value="Continue">';
-                html += '</form>';
-                popup.innerHTML = html;
-                popup.style.visibility = "visible";
-                document.getElementById("main").style.opacity = "0.1";
+                popUp(data.state, true);
+            } else if (local.message) {
+                popUp(local.message, true);
             } else {
-                document.getElementById("popup").style.visibility = "hidden";
-                document.getElementById("main").style.opacity = "1.0";
+                popUp('', false);
 			    setTimeout(activity, 1000);
             }
 		})
@@ -233,12 +244,10 @@
                                 highlighted = true;
                         }
                 }
+                guess_html += '<input type="text"';
                 if (highlighted) {
-                        guess_html += '<input type="text"';
                         // TODO: read background from style sheet
                         guess_html += ' style="background:yellow;"';
-                } else {
-                        guess_html += '<input type="text"';
                 }
                 guess_html += ' id="l' + i + '"';
                 guess_html += ' oninput="MoveGuessCursor(this)"';
@@ -289,6 +298,9 @@
         document.getElementById("next_scramble").style.visibility = "visible";
     } else {
         document.getElementById("next_scramble").style.visibility = "hidden";
+    }
+    if (local.message) {
+        popUp(local.message, true);
     }
 </script>
 

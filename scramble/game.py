@@ -71,6 +71,9 @@ class Game(object):
 
     def solve(self, pid, uid):
         scrambl = self.get_scramble(pid)
+        if scrambl.solved:
+            return
+
         scrambl.solve(uid)
         mystery = self.puzzles[self.puzzle][-1]
         for index in scrambl.indices:

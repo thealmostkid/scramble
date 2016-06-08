@@ -21,22 +21,35 @@ def gui():
         text='version: %s' % scramble.__version.version)
     ver.grid(column=0, row=0, columnspan=2, sticky='EW')
 
-    host_name = socket.getfqdn()
-    ip_addr = None
-    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]:
-        s.connect(('8.8.8.8', 53))
-        addr = s.getsockname()[0]
-        s.close()
-        if not addr.startswith('127.'):
-            ip_addr = addr
-            continue
+    try:
+        host_name = socket.getfqdn()
+        ip_addr = None
+        for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]:
+            s.connect(('8.8.8.8', 53))
+            addr = s.getsockname()[0]
+            s.close()
+            if not addr.startswith('127.'):
+                ip_addr = addr
+                continue
+    except:
+        ip_addr = None
     if ip_addr is None:
         ip_addr = "Failed to determine IP address"
 
+    text_params = {'host': host_name, 'port': str(scramble.server.SERVER_PORT),
+            'ip': str(ip_addr)}
+    text = '''
+Start a test:
+http://{host}:{port}/
+or
+http://{ip}:{port}/
+
+Admin page:
+http://{ip}:{port}/admin
+'''.format(**text_params)
+
     url = Tkinter.Label(root, anchor="w",
-            text='The URL is http://%s:%d/\nor http://%s:%d/' % (host_name,
-                scramble.server.SERVER_PORT, ip_addr,
-                scramble.server.SERVER_PORT))
+            text=text)
     url.grid(column=0, row=1, columnspan=2, sticky='EW')
     root.mainloop()
 

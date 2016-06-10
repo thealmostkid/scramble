@@ -3,6 +3,7 @@ set -e
 dir=`dirname $0`
 ${dir}/clean
 
+# TODO: make windows app firewall work
 # windows app
 version=`cat scramble/__version.py | cut -d'=' -f2 | sed -e "s/'//g"`
 sed -e "s/__VERSION__/${version}/g" installer.cfg > v_installer.cfg

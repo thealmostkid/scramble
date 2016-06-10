@@ -489,6 +489,7 @@ def MakeHandlerClassFromArgv(engine):
                     engine.time_limit = int(params['time_limit'][0])
                     engine.required_user_count = int(params['group_size'][0])
                     engine.survey_url = params['survey'][0]
+                    # TODO: implement these
                     print 'GAME COUNT = %d' % int(params['game_count'][0])
                     print 'SOLVER = %s' % params['solver'][0]
                 except Exception as e:

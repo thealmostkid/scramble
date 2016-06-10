@@ -74,6 +74,7 @@ class Game(object):
         if scrambl.solved:
             return
 
+        # TODO: mystery solved
         scrambl.solve(uid)
         mystery = self.puzzles[self.puzzle][-1]
         for index in scrambl.indices:

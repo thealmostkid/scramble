@@ -7,6 +7,8 @@ import urlparse
 import scramble.engine
 import scramble.puzzle
 
+print scramble.engine.MYSTERY_ALGOS
+
 SERVER_PORT = 8001
 
 
@@ -116,13 +118,17 @@ def MakeHandlerClassFromArgv(engine):
                     self.end_headers()
                     for line in f:
                         if 'LOCAL' in line:
+                            mystery_algo = 0
+                            for i in xrange(len(scramble.engine.MYSTERY_ALGOS)):
+                                if engine.mystery_algo == scramble.engine.MYSTERY_ALGOS[i]:
+                                    mystery_algo = i
                             values = {
                                     'time_limit': engine.time_limit,
-                                    'group_size': 3,
+                                    'group_size': engine.required_user_count,
                                     'game_count': 0,
                                     'survey': engine.survey_url,
-                                    # TODO: selected?
-                                    'solvers': ['random', 'rotate', 'high_earner'],
+                                    'solvers': scramble.engine.MYSTERY_ALGOS,
+                                    'solver_index': mystery_algo,
                                     }
                             self.wfile.write('var local=%s;\n' % json.dumps(values))
                         else:
@@ -172,12 +178,12 @@ def MakeHandlerClassFromArgv(engine):
                     for i, puzzle in enumerate(game.puzzles):
                         self.wfile.write('<tr><th>Puzzle %s</th></tr>' % i)
                         self.wfile.write('<tr><th>scramble</th><th>name</th><th>mystery</th><th>solved</th></tr>')
-                        for scramble in puzzle:
+                        for scrambl in puzzle:
                             self.wfile.write('<tr>')
-                            self.wfile.write('<td>%s</td>' % scramble.pid)
-                            self.wfile.write('<td>%s</td>' % scramble.pretty_name)
-                            self.wfile.write('<td>%s</td>' % scramble.mystery)
-                            self.wfile.write('<td>%s</td>' % scramble.solved)
+                            self.wfile.write('<td>%s</td>' % scrambl.pid)
+                            self.wfile.write('<td>%s</td>' % scrambl.pretty_name)
+                            self.wfile.write('<td>%s</td>' % scrambl.mystery)
+                            self.wfile.write('<td>%s</td>' % scrambl.solved)
                             self.wfile.write('</tr>')
                     self.wfile.write('</table>')
                     self.wfile.write('</td></tr>')
@@ -484,19 +490,56 @@ def MakeHandlerClassFromArgv(engine):
                 parts = ['admin', 'puzzles']
                 return self.do_GET_admin(parts, params)
             elif cmd == 'config':
+                errors = ''
                 try:
-                    # TODO: clean up error handling
-                    engine.time_limit = int(params['time_limit'][0])
-                    engine.required_user_count = int(params['group_size'][0])
-                    engine.survey_url = params['survey'][0]
-                    # TODO: implement these
-                    print 'GAME COUNT = %d' % int(params['game_count'][0])
-                    print 'SOLVER = %s' % params['solver'][0]
-                except Exception as e:
+                    time_limit = int(params['time_limit'][0])
+                    if time_limit <= 0:
+                        errors += 'Invalid time limit (%d)<br>' % time_limit
+                    else:
+                        engine.time_limit = time_limit
+                except ValueError as ve:
+                    errors += 'Invalid time limit (%s)<br>' % ve
+                except KeyError:
+                    errors += 'Missing time limit<br>'
+
+                try:
+                    user_count = int(params['group_size'][0])
+                    if user_count <= 0:
+                        errors += 'Invalid group size (%d)<br>' % user_count
+                    else:
+                        engine.required_user_count = user_count
+                except ValueError as ve:
+                    errors += 'Invalid group size (%s)<br>' % ve
+                except KeyError:
+                    errors += 'Missing group size<br>'
+
+                try:
+                    survey = params['survey'][0]
+                    if len(survey) <= 0:
+                        errors += 'Invalid survey url "%s"<br>' % survey
+                    else:
+                        engine.survey_url  = survey
+                except KeyError:
+                    errors += 'Missing survey url<br>'
+
+                try:
+                    algo = params['solver'][0]
+                    if algo not in scramble.engine.MYSTERY_ALGOS:
+                        errors += 'Invalid mystery solver selection "%s"' % algo
+                    else:
+                        engine.mystery_algo = algo
+                except KeyError:
+                    errors += 'Missing mystery solver selection<br>'
+
+                # TODO: implement these
+                print 'GAME COUNT = %d' % int(params['game_count'][0])
+
+                if len(errors) > 0:
                     self.send_error(400, 'Invalid configuration')
-                    self.wfile.write('<h3>Error:</h3><p><i>%s</i></p>' % e)
+                    self.wfile.write('<h3><font color=red>Error:</font></h3><p><i>%s</i></p>' % errors)
                     self.wfile.write('<br><a href="/admin/config">Back</a>')
                     return
+
                 parts = ['admin', 'config']
                 return self.do_GET_admin(parts, params)
             else:

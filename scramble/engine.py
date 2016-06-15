@@ -160,16 +160,23 @@ names = [
 'Woodrow',
 ]
 
+MYSTERY_ALGOS = [ 'random', 'rotate', 'high' ]
+
 class Engine(object):
     def __init__(self):
         self.games = dict()
         self.users = dict()
         self.stats = list()
+
+        # configurable:
         self.puzzle_database = scramble.puzzle.parse(
                 scramble.puzzle.DEFAULT.split('\n'))
-        self.time_limit = 60 * 2
+        self.time_limit = 60 * 7
         self.required_user_count = 3
-        self.survey_url = 'http://localhost/'
+        self.survey_url = '/survey'
+        self.mystery_algo = MYSTERY_ALGOS[0]
+        # TODO: implement barricade
+        self.game_count = 0
 
     def user(self, uid):
         return self.users[uid]
@@ -192,6 +199,7 @@ class Engine(object):
         return self.games[gid]
 
     def _select_mystery_solver(self, user_list):
+        # TODO: implement mystery selection
         return user_list[0]
 
     def _game_time_limit(self):

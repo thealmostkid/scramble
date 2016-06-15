@@ -31,13 +31,16 @@ table, th, td {
 
 <tr><td>Mystery Solver Selection:</td>
 <td>
-        <!-- TODO: selected? -->
 <script type="text/javascript">
     html = '';
     for (j = 0; j < local.solvers.length; j++) {
             html += '<input type="radio" name="solver" value="';
             html += local.solvers[j];
-            html += '" checked> ';
+            html += '"';
+            if (j == local.solver_index) {
+                html += ' checked ';
+            }
+            html += '>';
             html += local.solvers[j];
     }
     document.write(html);

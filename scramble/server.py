@@ -1,3 +1,10 @@
+# box score on credits page
+# server maintenance/uptime, etc
+# no one can play until all have clicked start
+# text editing
+# survey on new screen
+# more control of game layout
+
 import BaseHTTPServer
 import cgi
 import json

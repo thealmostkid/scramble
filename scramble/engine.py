@@ -235,7 +235,14 @@ class Engine(object):
         self.games[gid] = game
         for user in user_list:
             user.game = game
-        self._select_mystery_solver(user_list).mystery_solver = True
+        mystery_user = self._select_mystery_solver(user_list).mystery_solver = True
+        for user in user_list:
+            if user.mystery_solver:
+                self.record_stat(game.start, 'mystery_solver', game.gid,
+                        user.uid)
+            else:
+                self.record_stat(game.start, 'regular_solver', game.gid,
+                        user.uid)
 
         self.record_stat(game.start, 'puzzle_start', game.gid, game.puzzle)
         for user in game.users:

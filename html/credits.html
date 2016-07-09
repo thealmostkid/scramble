@@ -1,7 +1,28 @@
 <html>
         <head>
+<link href="/jumble.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="/jquery-1.12.2.min.js"></script>
 <script type="text/javascript">
     LOCAL
+
+    (function user_stats() {
+        $.getJSON('/user/' + local.uid + '/stats')
+        .done(function(data) {
+            stats_html = '<table>';
+            console.log(data);
+            for (i = 0; i < data.length; i++) {
+                stats_html += '<tr><td>' + data[i] + '</td></tr>';
+            }
+            stats_html += '</table>';
+            document.getElementById('stats.user').innerHTML = stats_html;
+		})
+		.fail(function() {
+			document.getElementById('game.status').innerHTML = "<p>Error</p>";
+		})
+		.always(function() {
+		});
+	})();
+
 </script>
 </head>
 
@@ -17,6 +38,10 @@
 <script type="text/javascript">
         document.write('Your user name is: ' + local.uid);
 </script>
+
+<div id="stats.user">
+</div>
+
 
         </body>
 </html>

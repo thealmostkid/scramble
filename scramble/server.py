@@ -10,9 +10,11 @@ import cgi
 import json
 import time
 import urlparse
+import operator
 
 import scramble.engine
 import scramble.puzzle
+
 
 print scramble.engine.MYSTERY_ALGOS
 
@@ -245,6 +247,43 @@ def MakeHandlerClassFromArgv(engine):
         #
         # user API
         #
+        def extract_user_stats(self, uid):
+            results = { 'mystery_guesses': 0,
+                    'mystery_solved': 0,
+                    'mystery_keys': 0,
+                    'regular_guesses': 0,
+                    'regular_solved': 0,
+                    'regular_keys': 0,
+                    'attempted': 0 }
+            stats = sorted([stat for stat in engine.stats if stat[3] == uid], key=operator.itemgetter(1))
+            mystery = False
+            for stat in stats:
+                if stat[1] == 'mystery_solver':
+                    mystery = True
+                elif stat[1] == 'regular_solver':
+                    mystery = False
+                elif stat[1] == 'scramble_start':
+                    results['attempted'] = results['attempted'] + 1
+                elif stat[1] == 'scramble_guess':
+                    if mystery:
+                        results['mystery_guesses'] = results['mystery_guesses'] + 1
+                    else:
+                        results['regular_guesses'] = results['regular_guesses'] + 1
+                elif stat[1] == 'scramble_solve':
+                    if mystery:
+                        results['mystery_solved'] = results['mystery_solved'] + 1
+                    else:
+                        results['regular_solved'] = results['regular_solved'] + 1
+                elif stat[1] == 'scramble_keys':
+                    if mystery:
+                        results['mystery_keys'] = results['mystery_keys'] + int(stat[2])
+                    else:
+                        results['regular_keys'] = results['regular_keys'] + int(stat[2])
+                else:
+                    raise ValueError('unknown stat %s' % stat[1])
+
+            return results
+
         def do_GET_user(self, path_parts, params):
             assert(path_parts[0] == 'user')
             uid = path_parts[1]
@@ -253,6 +292,20 @@ def MakeHandlerClassFromArgv(engine):
             except KeyError:
                 self.send_error(404, 'Cannot find user id "%s"' % uid)
                 return
+
+            if len(path_parts) > 2:
+                cmd = path_parts[2]
+                if cmd == 'stats':
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    user_stats = self.extract_user_stats(uid)
+                    self.wfile.write('%s' % json.dumps(user_stats))
+                    return
+                else:
+                    self.send_error(404, 'Unknown user command: %s' % cmd)
+                    return
+
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -263,7 +316,7 @@ def MakeHandlerClassFromArgv(engine):
                 values['gid'] = None
             self.wfile.write('%s' % json.dumps(values))
             return
- 
+
         #
         # game API
         #
@@ -290,6 +343,8 @@ def MakeHandlerClassFromArgv(engine):
             action = path_parts[2]
             if action == 'user':
                 return self.do_GET_game_user(path_parts, params)
+            elif action == 'stats':
+                return self.do_GET_game_stats(path_parts, params)
             else:
                 self.send_error(404)
             return
@@ -441,6 +496,35 @@ def MakeHandlerClassFromArgv(engine):
             except IOError:
                 self.send_error(501, 'failed to load %s' % source_file)
                 return
+            return
+
+# GET /game/<gid>/stats - get stats for this game
+        def do_GET_game_stats(self, path_parts, params):
+            '''
+            GET endpoint for /game/<gid>/stats
+            '''
+            if len(path_parts) < 3:
+                self.send_error(404, 'Invalid request for "%s"' %
+                        '/'.join(path_parts))
+                return
+
+            assert(path_parts[2] == 'stats')
+            gid = path_parts[1]
+            try:
+                game = engine.game(gid)
+            except KeyError:
+                self.send_error(404, 'Unknown game id %s' % gid)
+                return
+
+            # NAT:
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            user_stats = list()
+            for stat in engine.stats:
+                if stat[3] == uid:
+                    user_stats.append(stat)
+            self.wfile.write('%s' % json.dumps(user_stats))
             return
 
         #
@@ -678,9 +762,12 @@ def MakeHandlerClassFromArgv(engine):
 
             if scrambl.guess(guess):
                 game.solve(pid, uid)
-                engine.record_stat(time.time(), 'scramble_solve', pid, uid)
+                ts = time.time()
+                engine.record_stat(ts, 'scramble_solve', pid, uid)
+                engine.record_stat(ts, 'scramble_keys',
+                        len(game.get_scramble(pid).indices), uid)
                 if game.solved:
-                    engine.record_stat(time.time(), 'puzzle_solve', game.gid,
+                    engine.record_stat(ts, 'puzzle_solve', game.gid,
                             game.puzzle)
                 guess_message += 'correct'
             else:

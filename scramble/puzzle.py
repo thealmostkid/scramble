@@ -147,7 +147,7 @@ class Scramble(object):
         self.indices = list()
 
         self.mystery = False
-        self.solved = False
+        self.solved = None
         self.message = None
         self.prev_scramble = None
         self.next_scramble = None
@@ -156,7 +156,7 @@ class Scramble(object):
         return self.value.lower() == submission.lower()
 
     def solve(self, uid):
-        self.solved = True
+        self.solved = uid
         self.message = 'solved by %s' % uid
 
 def main():

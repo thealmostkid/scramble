@@ -343,8 +343,8 @@ def MakeHandlerClassFromArgv(engine):
             action = path_parts[2]
             if action == 'user':
                 return self.do_GET_game_user(path_parts, params)
-            elif action == 'stats':
-                return self.do_GET_game_stats(path_parts, params)
+            elif action == 'results':
+                return self.do_GET_game_results(path_parts, params)
             else:
                 self.send_error(404)
             return
@@ -499,16 +499,16 @@ def MakeHandlerClassFromArgv(engine):
             return
 
 # GET /game/<gid>/stats - get stats for this game
-        def do_GET_game_stats(self, path_parts, params):
+        def do_GET_game_results(self, path_parts, params):
             '''
-            GET endpoint for /game/<gid>/stats
+            GET endpoint for /game/<gid>/results
             '''
             if len(path_parts) < 3:
                 self.send_error(404, 'Invalid request for "%s"' %
                         '/'.join(path_parts))
                 return
 
-            assert(path_parts[2] == 'stats')
+            assert(path_parts[2] == 'results')
             gid = path_parts[1]
             try:
                 game = engine.game(gid)
@@ -520,11 +520,13 @@ def MakeHandlerClassFromArgv(engine):
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            user_stats = list()
-            for stat in engine.stats:
-                if stat[3] == uid:
-                    user_stats.append(stat)
-            self.wfile.write('%s' % json.dumps(user_stats))
+            results = []
+            for puzzle in game.puzzles:
+                for scrambl in puzzle:
+                    results.append([scrambl.pid,
+                        scrambl.solved,
+                        len(scrambl.indices)])
+            self.wfile.write('%s' % json.dumps(results))
             return
 
         #

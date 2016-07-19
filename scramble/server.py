@@ -452,17 +452,46 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown userid "%s"' % uid)
                 return
 
-            message = None
-            if 'message' in params:
-                message = params['message']
-
             if not game.completed():
-                source_file = 'html/scramble.html'
+                message = None
+                if 'message' in params:
+                    message = params['message'][0]
+                return self.load_scramble(game, user, message)
             else:
-                source_file = 'html/credits.html'
+                return self.load_credits(game, user)
 
+        def load_credits(self, game, user):
             try:
-                f = open(source_file)
+                f = open('html/credits.html')
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                for line in f:
+                    if 'LOCAL' in line:
+                        players = dict()
+                        for player in game.users:
+                            players[player.uid] = {'solved': 0, 'letters': 0}
+                        for puzzle in game.puzzles:
+                            for scrambl in puzzle:
+                                if scrambl.solved is not None:
+                                    if scrambl.solved not in players:
+                                        players[scrambl.solved] = {'solved': 0, 'letters': 0}
+                                    players[scrambl.solved]['solved'] += 1
+                                    players[scrambl.solved]['letters'] += len(scrambl.indices)
+
+                        values = {'uid': user.uid, 'players': players}
+                        self.wfile.write('var local=%s;\n' % json.dumps(values))
+                    else:
+                        self.wfile.write(line)
+                f.close()
+            except IOError:
+                self.send_error(501, 'failed to load %s' % source_file)
+                return
+            return
+
+        def load_scramble(self, game, user, message):
+            try:
+                f = open('html/scramble.html')
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
@@ -488,8 +517,8 @@ def MakeHandlerClassFromArgv(engine):
                             values['previous'] = None
 
                         self.wfile.write('var local=%s;\n' % json.dumps(values))
-                        if 'message' in params:
-                            self.wfile.write('var message=%s;\n' % json.dumps(params['message'][0]))
+                        if message is not None:
+                            self.wfile.write('var message=%s;\n' % json.dumps(message))
                     else:
                         self.wfile.write(line)
                 f.close()

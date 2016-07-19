@@ -4,25 +4,6 @@
 <script type="text/javascript" src="/jquery-1.12.2.min.js"></script>
 <script type="text/javascript">
     LOCAL
-
-    (function user_stats() {
-        $.getJSON('/user/' + local.uid + '/stats')
-        .done(function(data) {
-            stats_html = '<table>';
-            console.log(data);
-            for (i = 0; i < data.length; i++) {
-                stats_html += '<tr><td>' + data[i] + '</td></tr>';
-            }
-            stats_html += '</table>';
-            document.getElementById('stats.user').innerHTML = stats_html;
-		})
-		.fail(function() {
-			document.getElementById('game.status').innerHTML = "<p>Error</p>";
-		})
-		.always(function() {
-		});
-	})();
-
 </script>
 </head>
 
@@ -38,6 +19,25 @@
 <script type="text/javascript">
         document.write('Your user name is: ' + local.uid);
 </script>
+
+<table border=1>
+        <tr><th>Player<th>Scrambles Solved</th><th>Key Letters</th></tr>
+<script type="text/javascript">
+        solved = 0;
+        letters = 0;
+        results_html = '';
+        for (var player in local.players) {
+                results_html += '<tr><td>';
+                results_html += player;
+                results_html += '</td><td>';
+                results_html += local.players[player].solved;
+                results_html += '</td><td>';
+                results_html += local.players[player].letters;
+                results_html += '</td></tr>';
+        }
+        document.write(results_html);
+</script>
+</table>
 
 <div id="stats.user">
 </div>

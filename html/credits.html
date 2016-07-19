@@ -20,7 +20,7 @@
         document.write('Your user name is: ' + local.uid);
 </script>
 
-<table border=1>
+<table style="border-collapse: collapse;" border=1>
         <tr><th>Player<th>Scrambles Solved</th><th>Key Letters</th></tr>
 <script type="text/javascript">
         solved = 0;
@@ -34,7 +34,15 @@
                 results_html += '</td><td>';
                 results_html += local.players[player].letters;
                 results_html += '</td></tr>';
+
+                solved += local.players[player].solved;
+                letters += local.players[player].letters;
         }
+        results_html += '<tr style="border-top-style:solid;"><td>Total</td><td>';
+        results_html += solved;
+        results_html += '</td><td>';
+        results_html += letters;
+        results_html += '</td></tr>';
         document.write(results_html);
 </script>
 </table>

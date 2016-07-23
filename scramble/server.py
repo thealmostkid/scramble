@@ -882,8 +882,7 @@ def run(server_class=BaseHTTPServer.HTTPServer,
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever()
 
-def main():
-    engine = scramble.engine.Engine()
+def main(engine):
     for i in xrange(engine.required_user_count):
         engine.create_user('faker')
     engine.poll_for_new_game()
@@ -891,4 +890,4 @@ def main():
     run(handler_class=HandlerClass)
 
 if __name__ == '__main__':
-    main()
+    main(scramble.engine.Engine())

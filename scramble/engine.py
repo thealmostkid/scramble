@@ -245,9 +245,6 @@ class Engine(object):
                         user.uid)
 
         self.record_stat(game.start, 'puzzle_start', game.gid, game.puzzle)
-        for user in game.users:
-            self.record_stat(game.start, 'scramble_start', user.scramble.pid,
-                    user.uid)
 
         return game
 

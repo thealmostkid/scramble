@@ -57,7 +57,19 @@ class Game(object):
         self.solved = False
         # all players start game at first scramble
         for user in self.users:
-            user.scramble = self.puzzles[self.puzzle][0]
+            user.scramble = None
+
+    def all_users_ready(self):
+        for user in self.users:
+            if user.scramble is None:
+                return False
+        return True
+
+    def user_ready(self, uid):
+        user = self.get_user(uid)
+        user.scramble = self.puzzles[self.puzzle][0]
+        # timer for first puzzle starts when all users are ready
+        self.start = time.time()
 
     def timer(self):
         elapsed = int(time.time() - self.start)

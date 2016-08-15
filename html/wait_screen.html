@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>JUMBLE</title>
+<link href="/jumble.css" rel="stylesheet" type="text/css">
+<script type="text/javascript">
+    var user = undefined;
+    var message = undefined;
+    LOCAL
+    (function page() {
+	  url = '/game/';
+	  url += local.gid;
+	  url += '/user/';
+	  url += local.uid;
+      # TODO:
+        redirect(url);
+    }
+</script>
+</head>
+
+<body>
+
+
+        <center>
+                <div id="main">
+                        <p>Waiting for all users...</p>
+                </div>
+        </center>
+</body>
+</html>

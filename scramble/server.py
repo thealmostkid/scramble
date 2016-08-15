@@ -371,7 +371,7 @@ def MakeHandlerClassFromArgv(engine):
             for user in game.users:
                 users.append({'name': user.uid,
                     'mystery': user.mystery_solver,
-                    'scramble': user.scramble.pretty_name})
+                    'scramble': user.scramble.pretty_name if user.scramble is not None else ''})
             values['users'] = users
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -452,13 +452,41 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown userid "%s"' % uid)
                 return
 
-            if not game.completed():
+            if user.scramble is None:
+                game.user_ready(uid)
+                engine.record_stat(time.time(), 'scramble_start',
+                        user.scramble.pid, user.uid)
+
+            if game.completed():
+                return self.load_credits(game, user)
+            elif not game.all_users_ready():
+                return self.load_wait_screen(game, user)
+            else:
                 message = None
                 if 'message' in params:
                     message = params['message'][0]
                 return self.load_scramble(game, user, message)
-            else:
-                return self.load_credits(game, user)
+
+        def load_wait_screen(self, game, user):
+            try:
+                f = open('html/wait_screen.html')
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                for line in f:
+                    if 'LOCAL' in line:
+                        values = {
+                                'uid': user.uid,
+                                'gid': game.gid,
+                                }
+                        self.wfile.write('var local=%s;\n' % json.dumps(values))
+                    else:
+                        self.wfile.write(line)
+                f.close()
+            except IOError:
+                self.send_error(501, 'failed to load %s' % source_file)
+                return
+            return
 
         def load_credits(self, game, user):
             try:
@@ -469,15 +497,33 @@ def MakeHandlerClassFromArgv(engine):
                 for line in f:
                     if 'LOCAL' in line:
                         players = dict()
+                        # stats:
+                        # solved
+                        # mystery solved
+                        # letters uncovered
+                        # list of puzzle ids
+                        default_stats = {
+                                    'solved': 0,
+                                    'mystery': 0,
+                                    'letters': 0,
+                                    'scrambles': None,
+                                    }
                         for player in game.users:
-                            players[player.uid] = {'solved': 0, 'letters': 0}
+                            players[player.uid] = dict(default_stats)
                         for puzzle in game.puzzles:
                             for scrambl in puzzle:
                                 if scrambl.solved is not None:
-                                    if scrambl.solved not in players:
-                                        players[scrambl.solved] = {'solved': 0, 'letters': 0}
-                                    players[scrambl.solved]['solved'] += 1
-                                    players[scrambl.solved]['letters'] += len(scrambl.indices)
+                                    solver = scrambl.solved
+                                    if solver not in players:
+                                        players[solver] = dict(default_stats)
+                                    if scrambl.mystery:
+                                        players[solver]['mystery'] += 1
+                                    else:
+                                        players[solver]['solved'] += 1
+                                    players[solver]['letters'] += len(scrambl.indices)
+                                    if players[solver]['scrambles'] is None:
+                                        players[solver]['scrambles'] = list()
+                                    players[solver]['scrambles'].append(scrambl.pid)
 
                         values = {'uid': user.uid, 'players': players}
                         self.wfile.write('var local=%s;\n' % json.dumps(values))

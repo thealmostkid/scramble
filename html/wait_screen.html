@@ -5,17 +5,15 @@
 <title>JUMBLE</title>
 <link href="/jumble.css" rel="stylesheet" type="text/css">
 <script type="text/javascript">
-    var user = undefined;
-    var message = undefined;
     LOCAL
-    (function page() {
-	  url = '/game/';
-	  url += local.gid;
-	  url += '/user/';
-	  url += local.uid;
-      # TODO:
-        redirect(url);
-    }
+    setTimeout(function(){
+         url = '/game/';
+         url += local.gid;
+         url += '/user/';
+         url += local.uid;
+         window.location = url;
+      }, 1000);
+
 </script>
 </head>
 

@@ -141,7 +141,6 @@ def parse_puzzle(lexer, jumbles):
     while token is not None and token != 'elzzup':
         if token == 'jumble':
             scramble = parse_scramble(lexer)
-            print scramble
             validate_scramble(scramble, jumbles)
             scrambles.append(scramble)
         else:
@@ -197,16 +196,14 @@ def parse(text):
     while token is not None:
         if token == 'jumble':
             jumble = parse_jumble(lexer)
-            print jumble
             validate_jumble(jumble)
             jumbles[jumble.name] = jumble
         elif token == 'puzzle':
             puzzle = parse_puzzle(lexer, jumbles)
-            print puzzle
             validate_puzzle(puzzle, jumbles)
             puzzles.append(puzzle)
         else:
-            print 'Unknown token: "%s"' % token
+            raise ParseError('Unknown token: "%s"' % token)
         token = lexer.get_token()
 
     return Database(jumbles, puzzles)
@@ -304,4 +301,9 @@ elzzup
     return 0
 
 if __name__ == '__main__':
-    exit(main())
+    import sys
+    if len(sys.argv) > 1:
+        with open(sys.argv[1]) as lines:
+            print parse(lines)
+    else:
+        exit(main())

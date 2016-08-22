@@ -1,6 +1,8 @@
 import scramble.puzzle
 import time
 
+DUMMY_SCRAMBLE = scramble.puzzle.Scramble('000', 'dummy', '', '')
+
 class Game(object):
     def __init__(self, gid, time_limit, users, puzzle_database):
         self.gid = gid
@@ -14,29 +16,28 @@ class Game(object):
 
         # load puzzle database
         self.puzzles = list()
-        for g in xrange(len(puzzle_database)):
+        g = 0
+        for puzzle in puzzle_database.puzzles:
+            p = 0
             scrambles = list()
-            puzzle = puzzle_database[g]
-            for p in xrange(len(puzzle) - 1):
-                parts = puzzle[p]
+            for s in puzzle.scrambles:
+                jumble = puzzle_database.jumbles[s.name]
                 scrambl = scramble.puzzle.Scramble('%sp%ds%d' % (gid, g, p),
-                        str(p + 1), parts[0], parts[1])
-                # set indices
-                if len(parts) > 2:
-                    scrambl.indices = parts[2]
+                        str(p + 1), jumble.value, jumble.jumble)
+                scrambl.indices = s.keys
                 if p > 0:
                     scrambl.prev_scramble = scrambles[-1]
                     scrambl.prev_scramble.next_scramble = scrambl
+                scrambl.mystery = s.mystery
+                if scrambl.mystery:
+                    # reset because it will be filled with key letters
+                    scrambl.scramble = ''
                 scrambles.append(scrambl)
-
-            # special mystery scramble
-            mystery = scramble.puzzle.Scramble('%sp%dm' % (gid, g), 'Mystery', puzzle[-1][0], '')
-            mystery.mystery = True
-            mystery.prev_scramble = scrambles[-1]
-            mystery.prev_scramble.next_scramble = mystery
-            scrambles.append(mystery)
+                p = p + 1
 
             self.puzzles.append(scrambles)
+            
+            g = g + 1
 
         self.scrambles_index = dict()
         for puzzle in self.puzzles:
@@ -57,11 +58,11 @@ class Game(object):
         self.solved = False
         # all players start game at first scramble
         for user in self.users:
-            user.scramble = None
+            user.scramble = DUMMY_SCRAMBLE
 
     def all_users_ready(self):
         for user in self.users:
-            if user.scramble is None:
+            if user.scramble == DUMMY_SCRAMBLE:
                 return False
         return True
 

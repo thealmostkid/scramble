@@ -104,6 +104,11 @@ def MakeHandlerClassFromArgv(engine):
                 self.end_headers()
                 self.wfile.write('<html><body>')
                 self.wfile.write('<a href="/admin">Back To Admin</a>')
+                for jumble in engine.puzzle_database.jumbles:
+                    raise RuntimeError('new database not supported')
+                for puzzle in engine.puzzle_database.puzzles:
+                    raise RuntimeError('new database not supported')
+
                 for puzzle in engine.puzzle_database:
                     self.wfile.write('<table border=1>')
                     for j in xrange(len(puzzle) - 1):
@@ -452,7 +457,7 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown userid "%s"' % uid)
                 return
 
-            if user.scramble is None:
+            if user.scramble == scramble.game.DUMMY_SCRAMBLE:
                 game.user_ready(uid)
                 engine.record_stat(time.time(), 'scramble_start',
                         user.scramble.pid, user.uid)

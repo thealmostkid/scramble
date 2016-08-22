@@ -1,161 +1,32 @@
-puzzle
-scramble AFFORD DFROFA 
-scramble UPPER PRPUE 1,2,5
-scramble BELLS SELBL  
-scramble INJURY IRJUYN 
-scramble BLURRY BULYRR 1
-scramble NAVAL NVALA 2,5
-mystery BURLAP
+jumble s1 AFFORD DFROFA 
+jumble s2 UPPER PRPUE
+jumble s3 BELLS SELBL  
+jumble s4 INJURY IRJUYN 
+jumble s5 BLURRY BULYRR
+jumble s6 NAVAL NVALA
+jumble s7 BURLAP PLRUBA
 
-puzzle
-scramble TIMING TGMINI 
-scramble ANYHOW OWHANY 
-scramble FLOCK CKOLF 1,3
-scramble NOODLE DNOLEO 2,4,6
-scramble LUCKY KUYLC 1
-scramble BELLY LEYLB 
-mystery FOOLED
+jumble s8 TIMING TGMINI 
+jumble s9 ANYHOW OWHANY 
+jumble s10 FLOCK CKOLF
+jumble s11 NOODLE DNOLEO
+jumble s12 LUCKY KUYLC
+jumble s13 BELLY LEYLB 
+jumble s14 FOOLED FOODLE
 
-puzzle
-scramble AROUND RONDAU 
-scramble FOODS OFDSO 
-scramble PROVES PVORES 2,6
-scramble CHESS SHECS 
-scramble CROWN NOWRC 1
-scramble BALLOT ALTLBO 3,4,5
-mystery SCROLL
+puzzle warmup seconds 180
+jumble s10 keys 1,3
+jumble s11 keys 2,4,6
+jumble s12 keys 1
+jumble s14 mystery
+elzzup
 
-puzzle
-scramble FEVER RVFEE 
-scramble AGLOW AWLOG 2,5
-scramble BRIGHT GBITHR 
-scramble ROYAL RLYAO 1,2,5
-scramble BUDGET EBDTGU 1
-scramble TROPHY YTOPRH 
-mystery GLOBAL
-
-puzzle
-scramble EXILE EEIXL 2,5
-scramble NAPKIN PNKIAN 1
-scramble IDIOT TODII 1,2,5
-scramble FUNNY NNUYF 
-scramble BROKEN ONERKB 
-scramble PUBLIC CLPIBU 
-mystery POLICE
-
-puzzle
-scramble CANCER NEARCC
-scramble BANKS KBANS 1,2,5
-scramble BEMOAN NBOEAM 1
-scramble LOUSY YOULS 
-scramble GIVEN NGVIE 2,5
-scramble CHANGE GNHEAC 
-mystery BECOME
-
-puzzle
-scramble MONEY ENYOM
-scramble THANK HNKTA 2,5
-scramble PLANET NTAPLE 1
-scramble STRESS SETSRS 
-scramble CLOUDY YUDCOL 
-scramble CHALK LACKH 1,2,5
-mystery HEALTH
-
-puzzle
-scramble NUDGE DGENU 
-scramble COTTON OCTNOT
-scramble JOLLY LOLYJ 2,5
-scramble GUZZLE ZELZUG 1
-scramble GILLS LGSIL 1,2,5
-scramble IMMUNE MIENMU 6
-mystery JUNGLE
-
-puzzle
-scramble CHILD LIDHC 1,2,5
-scramble MIXERS RMIESX 
-scramble DOCTOR CODROT 
-scramble HELLO LOLEH 2,5
-scramble UNSEEN ENUESN 1
-scramble PROOF FOPOR 
-mystery EXCUSE
-
-puzzle
-scramble KNEED KEDEN 1,2,5
-scramble CLINIC IICCNL 1
-scramble TRICK KIRTC 
-scramble GOOSE SOGEO 2,5
-scramble FUMBLE EMBLUF 
-scramble INJECT TCNIEJ 
-mystery COOKED
-
-puzzle
-scramble MOLDS DOSLM1,2,5
-scramble DEVICE DCEIEV
-scramble HONOR OHNRO 2,5
-scramble HIDDEN DNIEHD
-scramble WOULD DULOW
-scramble POISON NOPSIO 1
-mystery REMOVE
-
-puzzle
-scramble WHEEL EEHWL
-scramble VALLEY YEALLV
-scramble NIFTY FINYT 2,5
-scramble SKUNK KKNUS 1,2,5
-scramble HARDER RRHADE 1
-scramble HUMBLE MUHLEB
-mystery HEAVEN
-
-puzzle
-scramble OVENS NVOSE 2,5
-scramble ZIPPER PIERPRZ 1
-scramble JETLAB TAGEJL
-scramble FLOSS SLOFS 1,2,5
-scramble POCKET CPOTKE
-scramble BROWN NOBWR
-mystery LOSSES
-
-puzzle
-scramble CHAIR HIRAC
-scramble OMEGA GEMAO 1,2,5
-scramble TATTOO TOTOAT
-scramble KNIGHT THINGK 1
-scramble ERROR REORR 2,5
-scramble LAWYER WYERAL 
-mystery MATTER
-
-puzzle
-scramble PAYING YGINAP 1
-scramble ALPHA PAHLA 2,5
-scramble YELLOW ELOLWY
-scramble CLAWS SLCAW 1,2,5
-scramble FIGHT THIFG
-scramble LAYOFF FLYAOF
-mystery POLICY
-
-puzzle
-scramble STYLE LTYES
-scramble PENCIL CLNPIE
-scramble MELODY OLDMEY
-scramble WALNUT AWLUTN 1
-scramble DRAWN RNADW 1,2,5
-scramble IRONY 2,5 YONRI
-mystery AIRWAY
-
-puzzle
-scramble FELLOW FLELWO 1
-scramble CANNED NCENAD
-scramble DOUGH HOGUD 1,2,5
-scramble MYSELF FEYLSM
-scramble DOUBT BUTDO 2,5
-scramble AVOID DOAVI
-mystery ABOUND
-
-puzzle
-scramble NEEDLE ENDLEE
-scramble PILOT PTOIL 2,5
-scramble FLOODS SOLDOF
-scramble LOKBC BLOCK
-scramble CHERRY RCYREH
-scramble NIECE CNEIE 1,2,5
-mystery COLDER
+puzzle p1 seconds 300
+jumble s1
+jumble s2 keys 1,2,5
+jumble s3
+jumble s4
+jumble s5 keys 1
+jumble s6 keys 2,5
+jumble s7 mystery
+elzzup

@@ -12,6 +12,41 @@ scramble STYLE TESYL
 scramble MELODY DYLOME
 mystery AIRWAY'''
 
+NEW_DEFAULT = '''
+jumble s1 AFFORD DFROFA 
+jumble s2 UPPER PRPUE
+jumble s3 BELLS SELBL  
+jumble s4 INJURY IRJUYN 
+jumble s5 BLURRY BULYRR
+jumble s6 NAVAL NVALA
+jumble s7 BURLAP PLRUBA
+
+jumble s8 TIMING TGMINI 
+jumble s9 ANYHOW OWHANY 
+jumble s10 FLOCK CKOLF
+jumble s11 NOODLE DNOLEO
+jumble s12 LUCKY KUYLC
+jumble s13 BELLY LEYLB 
+jumble s14 FOOLED FOODLE
+
+puzzle warmup seconds 180
+jumble s10 keys 1,3
+jumble s11 keys 2,4,6
+jumble s12 keys 1
+jumble s14 mystery
+elzzup
+
+puzzle p1 seconds 300
+jumble s1
+jumble s2 keys 1,2,5
+jumble s3
+jumble s4
+jumble s5 keys 1
+jumble s6 keys 2,5
+jumble s7 mystery
+elzzup
+'''
+
 def parse(lines):
     puzzles = list()
     current_puzzle = None

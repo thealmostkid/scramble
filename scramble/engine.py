@@ -2,6 +2,7 @@ import random
 import time
 
 import scramble.game
+import scramble.parser
 import scramble.user
 
 GID_PREFIX = 'g'
@@ -171,11 +172,11 @@ class Engine(object):
         # configurable:
         self.puzzle_database = scramble.puzzle.parse(
                 scramble.puzzle.DEFAULT.split('\n'))
+        self.puzzle_database = scramble.parser.parse(scramble.puzzle.NEW_DEFAULT)
         self.time_limit = 60 * 7
         self.required_user_count = 3
         self.survey_url = '/survey'
         self.mystery_algo = MYSTERY_ALGOS[0]
-        # TODO: implement barricade
         self.game_count = 0
 
     def user(self, uid):

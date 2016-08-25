@@ -3,16 +3,6 @@ Logic for running a scramble.
 '''
 
 DEFAULT = '''
-puzzle
-scramble DRAWN DNRAW 2,3,4
-scramble IRONY INROY 1,5
-scramble WALNUT AWLUTN 2
-scramble PENCIL CILNEP
-scramble STYLE TESYL
-scramble MELODY DYLOME
-mystery AIRWAY'''
-
-NEW_DEFAULT = '''
 jumble s1 AFFORD DFROFA 
 jumble s2 UPPER PRPUE
 jumble s3 BELLS SELBL  

@@ -170,9 +170,7 @@ class Engine(object):
         self.stats = list()
 
         # configurable:
-        self.puzzle_database = scramble.puzzle.parse(
-                scramble.puzzle.DEFAULT.split('\n'))
-        self.puzzle_database = scramble.parser.parse(scramble.puzzle.NEW_DEFAULT)
+        self.puzzle_database = scramble.parser.parse(scramble.puzzle.DEFAULT)
         self.time_limit = 60 * 7
         self.required_user_count = 3
         self.survey_url = '/survey'

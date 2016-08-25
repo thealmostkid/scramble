@@ -1,19 +1,16 @@
-barricade starting game
 advanced statistics (puzzle number, mystery scramble)
 text database (default and via file upload [intro, puzzle, credits pages])
-configurable level files (puzzles, order, time)
 default wording on all pages
 consistent look and feel and usability review
 
 Todo:
 1. consistent look and feel and usability review
 2. update the text/wording throughout app
-round, which puzzles in each round, etc)
 4. customizable text throughout the app
 
 Completed/In-progress:
 i. players and timer start solving only when all players have clicked
-- Redirect within Javascript needed 
 ii. advanced statistics (puzzle number, mystery scramble)
 - Who is this for?  What do players need to know versus admins?
 iii. more control over "levels" (how many scrambles per round, time limit of each
+    round, which puzzles in each round, etc)

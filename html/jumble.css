@@ -19,14 +19,20 @@ body{
   margin: 20px auto;
 }
 
-#highlight 
-{
-  background: yellow;
+#popup {
+        position: absolute;
+        height: 200px;
+        width: 400px;
+        margin: -100px -60px -40px -200px;
+        top: 50%;
+        left: 50%;
+	text-align: center;
+	vertical-align: middle;
 }
 
 section{
-  width: 25px;
-  height: 30px;
+  width: 35px;
+  height: 40px;
   padding: 5px;
   background: white;
   border-style: solid;
@@ -34,6 +40,7 @@ section{
   border-width: 1px 1px 1px 1px;
   color: #333;
   text-align: center;
+
   display: inline-block;
   margin-right: 2px;
   font-weight: bold;
@@ -41,11 +48,12 @@ section{
   font-size: 1.5em;
   background: white;
 
+
 }
 
 input[type=text]{
-  width: 25px;
-  height: 30px;
+  width: 35px;
+  height: 40px;
   padding: 5px;
   background: white;
   border-style: solid;
@@ -67,14 +75,14 @@ input[type=text]:focus{
 
 input[type=submit]{
     background-color: blue; 
-	width: 100px;
+	width: 120px;
 	height: 40px;
     border: none;
     color: white;
     padding: 10px 20px;
     text-align: center;
     display: inline-block;
-    font-size: .75em;
+    font-size: 1.25em;
     border-radius: 4px;
 }
 

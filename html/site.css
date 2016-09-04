@@ -1,0 +1,60 @@
+@charset "UTF-8";
+/* CSS Document */
+<style>
+html, body{
+	margin: 0;
+	padding: 0;
+	height: 100%; 
+  background: white;
+}
+
+body{
+	font-family: arial, sans-serif;
+	font-size: 1.0em;
+}
+
+#wrapper {
+  width: 75%;
+  margin: 20px auto;
+  padding:  50px auto;
+}
+
+input[type=text]{
+  width: 300px;
+  height: 40px;
+  background: white;
+  border-style: solid;
+  border-color: black;  
+  border-width: 1px 1px 1px 1px;
+  color: #333;
+  text-align: left;
+  display: inline-block;
+  font-family: arial, sans-serif;
+  font-size: 1.0em;
+}
+
+input[type=submit]{
+    background-color: blue; 
+	width: 100px;
+	height: 40px;
+    border: none;
+    color: white;
+    text-align: center;
+    display: inline-block;
+    font-size: 0.75em;
+    border-radius: 4px;
+}
+
+table {
+	table-layout:fixed;
+	border-collapse:  collapse;
+}
+
+td {width:33%}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+}
+</style>

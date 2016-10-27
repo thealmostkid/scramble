@@ -34,10 +34,9 @@ input[type=text]{
 }
 
 input[type=submit]{
-    background-color: blue; 
-	width: 100px;
-	height: 40px;
+    background-color: blue;
     border: none;
+    padding: 10px;
     color: white;
     text-align: center;
     display: inline-block;

@@ -7,6 +7,7 @@
 <style media="screen" type="text/css">
 </style>
 <script type="text/javascript" src="/jquery-1.12.2.min.js"></script>
+<script type="text/javascript" src="/functions.js"></script>
 <script type="text/javascript">
     var user = undefined;
     var message = undefined;
@@ -15,7 +16,8 @@
     function pad(n){return n<10 ? '0'+n : n}
 
     function popUp(message, visible) {
-            html = '<p>' + message + '</p>';
+            html = '<div style="padding:5px;float:bottom;">' + message + '</div>';
+            html += '<br>';
             html += '<form action = "/game/';
             html += local.gid;
             html += '/advance" method="post">';
@@ -59,7 +61,13 @@
                 status_html += '<table>';
            for (i = 0; i < data.users.length; i++) {
                 status_html += '<tr><td>';
-                status_html += 'Player <b>' + data.users[i].name + '</b>';
+                status_html += 'Player <b>';
+                if (local.uid == data.users[i].name) {
+                    status_html += '<font color="green">(You) ';
+                } else {
+                    status_html += '<font>';
+                }
+                status_html += data.users[i].name + '</font></b>';
                 if (data.users[i].mystery) {
                     status_html += ' <font color="red">(mystery)</font>';
                 }
@@ -76,7 +84,9 @@
             time_string += pad(time_left.getUTCSeconds());
             document.getElementById('game.time').innerHTML = time_string;
             if (data.state) {
-                popUp(data.state, true);
+                stats_html = draw_stats(data.player_stats);
+                text = data.state + "<br>" + stats_html;
+                popUp(text, true);
             } else if (local.message) {
                 popUp(local.message, true);
             } else {
@@ -276,7 +286,7 @@
 </div>
 </center>
 
-<div id="popup" style="z-index=100; background-color: lightblue" width=500 height=100>
+<div id="popup" style="visibility: hidden;">
         <p>Game Done!</p>
 </div>
 

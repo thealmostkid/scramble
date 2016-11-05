@@ -172,7 +172,7 @@ class Engine(object):
         # configurable:
         self.puzzle_database = scramble.parser.parse(scramble.puzzle.DEFAULT)
         self.time_limit = 60 * 7
-        self.required_user_count = 2
+        self.required_user_count = 3
         self.survey_url = '/survey'
         self.mystery_algo = MYSTERY_ALGOS[0]
         self.game_count = 0

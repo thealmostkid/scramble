@@ -8,6 +8,7 @@ class Game(object):
         self.gid = gid
         self.time_limit = time_limit
         self.solved = False
+        self.solved_count = 0
 
         self.users = users
         self.users_index = dict()
@@ -94,3 +95,5 @@ class Game(object):
         for index in scrambl.indices:
             mystery.scramble += scrambl.value[index - 1]
         self.solved = mystery.solved is not None
+        if self.solved:
+            self.solved_count += 1

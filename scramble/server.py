@@ -65,21 +65,6 @@ def MakeHandlerClassFromArgv(engine):
         #
         # admin API
         #
-        def dump_scramble(self, scrambl, scramble_type, output):
-            output.write('<tr>')
-            output.write('<td>%s</td>' % scramble_type)
-            output.write('<td>%s</td>' % scrambl[0])
-            output.write('<td>')
-            if len(scrambl) > 1:
-                output.write(scrambl[1])
-            output.write('</td>')
-
-            output.write('<td>')
-            if len(scrambl) > 2:
-                output.write(','.join([str(indx) for indx in scrambl[2]]))
-            output.write('</td>')
-
-            output.write('</tr>')
 
 # GET /admin/
         def do_GET_admin(self, path_parts, params):
@@ -285,14 +270,20 @@ def MakeHandlerClassFromArgv(engine):
                     'regular_guesses': 0,
                     'regular_solved': 0,
                     'regular_keys': 0,
+                    'puzzle_start': 0,
+                    'puzzle_solve': 0,
+                    'puzzle_failed': 0,
                     'attempted': 0 }
             stats = sorted([stat for stat in engine.stats if stat[3] == uid], key=operator.itemgetter(1))
             mystery = False
+            gid = None
             for stat in stats:
                 if stat[1] == 'mystery_solver':
                     mystery = True
+                    gid = stat[2]
                 elif stat[1] == 'regular_solver':
                     mystery = False
+                    gid = stat[2]
                 elif stat[1] == 'scramble_start':
                     results['attempted'] = results['attempted'] + 1
                 elif stat[1] == 'scramble_guess':
@@ -313,6 +304,17 @@ def MakeHandlerClassFromArgv(engine):
                 else:
                     raise ValueError('unknown stat %s' % stat[1])
 
+            assert(gid is not None)
+            game_stats = sorted([stat for stat in engine.stats if stat[2] == gid], key=operator.itemgetter(1))
+            print game_stats
+            for stat in game_stats:
+                print stat
+                if stat[1] == 'puzzle_solve':
+                    results['puzzle_solve'] = results['puzzle_solve'] + 1
+                elif stat[1] == 'puzzle_expired':
+                    results['puzzle_failed'] = results['puzzle_failed'] + 1
+                elif stat[1] == 'puzzle_start':
+                    results['puzzle_start'] = results['puzzle_start'] + 1
             return results
 
         def do_GET_user(self, path_parts, params):
@@ -559,6 +561,7 @@ def MakeHandlerClassFromArgv(engine):
                     'solved': 0,
                     'mystery': 0,
                     'letters': 0,
+                    'sets': 0,
                     'scrambles': None,
                     }
             for player in game.users:
@@ -585,12 +588,18 @@ def MakeHandlerClassFromArgv(engine):
         def _solved_puzzle_stats(self, game):
             players = self._default_stats(game)
             self._puzzle_stats(players, game.puzzles[game.puzzle])
+            for stats in players.values():
+                if game.solved:
+                    # TODO: this is always 1
+                    stats['sets'] = 1
             return players
 
         def _solved_game_stats(self, game):
             players = self._default_stats(game)
             for puzzle in game.puzzles:
                 self._puzzle_stats(players, puzzle)
+            for stats in players.values():
+                stats['sets'] = game.solved_count
             return players
 
         def load_credits(self, game, user):

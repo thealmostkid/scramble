@@ -8,11 +8,11 @@ function draw_stats(players) {
     results_html += '<tr><td>';
     results_html += players[player].name;
     results_html += '</td><td>';
-    results_html += players[player].solved;
+    results_html += players[player].solved + players[player].mystery;
     results_html += '</td><td>';
     results_html += players[player].letters;
     results_html += '</td><td>';
-    results_html += players[player].mystery;
+    results_html += players[player].sets;
     results_html += '</td></tr>';
 
     mysteries += players[player].mystery;

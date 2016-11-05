@@ -12,24 +12,44 @@
 <!-- TODO: fix text -->
 <div id=wrapper>
         <body>
-                Thanks for participating in our study!
-                <br>
-<script type="text/javascript">
-        document.write('<a href="' + local.url + '" target="_blank">Survey</a>');
-</script>
-<br>
+                <p>
+                You have completed the puzzle solving section of today's
+                session.
+                </p>
 
+                <p>
+                The table below provides detail about your performance today as
+                <b>
 <script type="text/javascript">
-        document.write('Your user name is: ' + local.uid);
+        document.write(local.game_name);
 </script>
+</b>:
+                </p>
 
+<center>
 <script type="text/javascript">
         results_html = draw_stats(local.players);
         document.write(results_html);
 </script>
-</div>
+</center>
 
-<div id="stats.user">
+<p>
+You will now answer some questions about your experience today.
+</p>
+
+<p>
+Please click on the link below to answer the questions. This will open a new
+window. <b>Do not close the current window</b>. To receive your payment, the
+administrator must be able to view the table above.
+</p>
+
+<center>
+<script type="text/javascript">
+        document.write('<a href="' + local.url + '" target="_blank">Survey</a>');
+</script>
+</center>
+<br>
+
 </div>
 
 

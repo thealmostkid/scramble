@@ -104,23 +104,46 @@ def MakeHandlerClassFromArgv(engine):
                 self.end_headers()
                 self.wfile.write('<html><body>')
                 self.wfile.write('<a href="/admin">Back To Admin</a>')
-                for jumble in engine.puzzle_database.jumbles:
-                    raise RuntimeError('new database not supported')
-                for puzzle in engine.puzzle_database.puzzles:
-                    raise RuntimeError('new database not supported')
 
-                for puzzle in engine.puzzle_database:
-                    self.wfile.write('<table border=1>')
-                    for j in xrange(len(puzzle) - 1):
-                        scrambl = puzzle[j]
-                        self.dump_scramble(scrambl, 'puzzle', self.wfile)
-                    scrambl = puzzle[-1]
-                    self.dump_scramble(scrambl, 'mystery', self.wfile)
-                    self.wfile.write('</table>')
+                # upload
+                self.wfile.write('<h2>Upload</h2>')
                 self.wfile.write('<form action="/admin/puzzles" method="post" enctype="multipart/form-data">')
                 self.wfile.write('<input type="file" name="puzzles_file" id="puzzles_file">')
                 self.wfile.write('<input type="submit" value="Upload">')
                 self.wfile.write('</form>')
+
+                # write out jumbles
+                self.wfile.write('<h2>Jumbles</h2>')
+                self.wfile.write('<table border=1 cellpadding=5>')
+                self.wfile.write('<tr><th>Name</th><th>Value</th><th>Jumble</th></tr>')
+                for name in sorted(engine.puzzle_database.jumbles.keys()):
+                    jumble = engine.puzzle_database.jumbles[name]
+                    self.wfile.write('<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % \
+                            (jumble.name, jumble.value, jumble.jumble))
+                self.wfile.write('</table>')
+
+                # write out puzzles
+                self.wfile.write('<h2>Puzzles</h2>')
+                self.wfile.write('<table border=2 cellpadding=1>')
+                self.wfile.write('<tr><th>Name</th><th>Time Limit</th><th>Scrambles</th></tr>')
+                for puzzle in engine.puzzle_database.puzzles:
+                    self.wfile.write('<tr>')
+                    self.wfile.write('<td>%s</td>' % puzzle.name)
+                    self.wfile.write('<td>%g seconds</td>' % puzzle.seconds)
+                    self.wfile.write('<td>')
+                    self.wfile.write('<table border=1 cellpadding=5>')
+                    self.wfile.write('<tr><td>Jumble Name</td><td>Keys</td><td>Mystery</td></tr>')
+                    for scramble in puzzle.scrambles:
+                        self.wfile.write('<tr>')
+                        self.wfile.write('<td>%s</td>' % scramble.name)
+                        self.wfile.write('<td>%s</td>' % ', '.join([str(key) for key in scramble.keys]))
+                        self.wfile.write('<td>%s</td>' % scramble.mystery)
+                        self.wfile.write('</tr>')
+                    self.wfile.write('</table>')
+                    self.wfile.write('</td>')
+                    self.wfile.write('</tr>')
+                self.wfile.write('</table>')
+
                 self.wfile.write('<a href="/admin">Back To Admin</a>')
                 self.wfile.write('</body></html>')
             elif 'config' == cmd:
@@ -239,7 +262,10 @@ def MakeHandlerClassFromArgv(engine):
                 self.end_headers()
                 for line in f:
                     if 'LOCAL' in line:
-                        values = {'uid': user.uid}
+                        values = {
+                                'uid': user.uid,
+                                'game_name': user.game_name
+                                }
                         self.wfile.write('var local=%s;\n' % json.dumps(values))
                     else:
                         self.wfile.write(line)
@@ -314,7 +340,11 @@ def MakeHandlerClassFromArgv(engine):
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            values = {'name': user.real_name, 'uid': user.uid}
+            values = {
+                    'name': user.real_name,
+                    'uid': user.uid,
+                    'game_name': user.game_name,
+                    }
             if user.game is not None:
                 values['gid'] = user.game.gid
             else:
@@ -377,7 +407,7 @@ def MakeHandlerClassFromArgv(engine):
                     'player_stats': player_stats}
             users = list()
             for user in game.users:
-                users.append({'name': user.uid,
+                users.append({'name': user.game_name,
                     'mystery': user.mystery_solver,
                     'scramble': user.scramble.pretty_name if user.scramble is not None else ''})
             values['users'] = users
@@ -417,10 +447,26 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown scramble "%s"' % pid)
                 return
 
-            values = {'scramble': scrambl.scramble,
+            solvers = list()
+            mystery_solver = ''
+            for u in game.users:
+                if scrambl.mystery:
+                    if u.mystery_solver:
+                        solvers.append(u.game_name)
+                else:
+                    solvers.append(u.game_name)
+                if u.mystery_solver:
+                    mystery_solver = u.game_name
+
+            values = {
+                    'scramble': scrambl.scramble,
                     'solved': scrambl.solved,
                     'hidden': (scrambl.mystery and not user.mystery_solver),
-                    'message': scrambl.message}
+                    'message': scrambl.message,
+                    'scramble_name': user.scramble.pretty_name if user.scramble is not None else '',
+                    'solvers': ', '.join(solvers),
+                    'mystery_solver': mystery_solver,
+                    }
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -486,6 +532,7 @@ def MakeHandlerClassFromArgv(engine):
                         values = {
                                 'uid': user.uid,
                                 'gid': game.gid,
+                                'game_name': user.game_name,
                                 }
                         self.wfile.write('var local=%s;\n' % json.dumps(values))
                     else:
@@ -508,13 +555,15 @@ def MakeHandlerClassFromArgv(engine):
             # letters uncovered
             # list of puzzle ids
             default_stats = {
-                        'solved': 0,
-                        'mystery': 0,
-                        'letters': 0,
-                        'scrambles': None,
-                        }
+                    'name': 'Unknown',
+                    'solved': 0,
+                    'mystery': 0,
+                    'letters': 0,
+                    'scrambles': None,
+                    }
             for player in game.users:
-                players[player.uid] = dict(default_stats)
+                players[player.game_name] = dict(default_stats)
+                players[player.game_name]['name'] = player.game_name
             return players
 
         def _puzzle_stats(self, players, puzzle):
@@ -553,7 +602,12 @@ def MakeHandlerClassFromArgv(engine):
                 for line in f:
                     if 'LOCAL' in line:
                         players = self._solved_game_stats(game)
-                        values = {'uid': user.uid, 'players': players}
+                        values = {
+                                'uid': user.uid,
+                                'game_name': user.game_name,
+                                'players': players,
+                                'url': engine.survey_url,
+                                }
                         self.wfile.write('var local=%s;\n' % json.dumps(values))
                     else:
                         self.wfile.write(line)
@@ -575,10 +629,10 @@ def MakeHandlerClassFromArgv(engine):
                                 'pid': user.scramble.pid,
                                 'scramble_name': user.scramble.pretty_name,
                                 'uid': user.uid,
+                                'game_name': user.game_name,
                                 'gid': game.gid,
                                 'scramble_len': len(user.scramble.value),
                                 'scramble_indices': user.scramble.indices,
-                                'url': engine.survey_url,
                                 'message': message,
                                 }
                         if user.scramble.next_scramble is not None:
@@ -677,12 +731,12 @@ def MakeHandlerClassFromArgv(engine):
             cmd = path_parts[1]
             if cmd == 'puzzles':
                 try:
-                    engine.puzzle_database = scramble.puzzle.parse(params['puzzles_file'][0].split('\n'))
+                    engine.puzzle_database = scramble.parser.parse(params['puzzles_file'][0])
                 except Exception as e:
                     self.send_error(400, 'Invalid puzzle list')
                     self.wfile.write('<h3>File Error:</h3><p><i>%s</i></p>' % e)
                     self.wfile.write('<a href="/admin/puzzles">Back</a>')
-                    return
+                    raise e
                 parts = ['admin', 'puzzles']
                 return self.do_GET_admin(parts, params)
             elif cmd == 'config':

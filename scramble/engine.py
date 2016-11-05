@@ -172,7 +172,7 @@ class Engine(object):
         # configurable:
         self.puzzle_database = scramble.parser.parse(scramble.puzzle.DEFAULT)
         self.time_limit = 60 * 7
-        self.required_user_count = 3
+        self.required_user_count = 2
         self.survey_url = '/survey'
         self.mystery_algo = MYSTERY_ALGOS[0]
         self.game_count = 0
@@ -181,8 +181,7 @@ class Engine(object):
         return self.users[uid]
 
     def create_user(self, real_name):
-        uid = '%s-%s' % (adjectives[random.randint(0, len(adjectives) - 1)],
-                names[random.randint(0, len(names) - 1)])
+        uid = '%d' % random.randint(0, 100000)
         user = scramble.user.User(uid, real_name)
         self.users[uid] = user
         return user
@@ -236,6 +235,7 @@ class Engine(object):
             user.game = game
         mystery_user = self._select_mystery_solver(user_list).mystery_solver = True
         for user in user_list:
+            self.record_stat(game.start, 'game_name', user.game_name, user.uid)
             if user.mystery_solver:
                 self.record_stat(game.start, 'mystery_solver', game.gid,
                         user.uid)

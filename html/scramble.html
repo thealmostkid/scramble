@@ -61,17 +61,9 @@
                 status_html += '<table>';
            for (i = 0; i < data.users.length; i++) {
                 status_html += '<tr><td>';
-                status_html += 'Player <b>';
-                if (local.uid == data.users[i].name) {
-                    status_html += '<font color="green">(You) ';
-                } else {
-                    status_html += '<font>';
-                }
-                status_html += data.users[i].name + '</font></b>';
-                if (data.users[i].mystery) {
-                    status_html += ' <font color="red">(mystery)</font>';
-                }
-                status_html += ' working on scramble <i>' + data.users[i].scramble + '</i>';
+                status_html += '<b>';
+                status_html += data.users[i].name + '</b>';
+                status_html += ' working on scramble ' + data.users[i].scramble;
                 status_html += '</td></tr>';
             }
             status_html += '</table></td>';
@@ -118,8 +110,14 @@
             } else {
                 document.getElementById("game.guess").style.visibility = "hidden";
             }
+
+            allowed_html = '<h3>Scramble ' + data.scramble_name + '</h3><br>';
+            allowed_html += '<b>Who can solve: </b>';
+            allowed_html += data.solvers;
+            document.getElementById("game.allowed").innerHTML = allowed_html;
+
             if (data.hidden) {
-                html = 'YOU ARE NOT THE MYSTERY SOLVER';
+                    html = '<font color=red>Only ' + data.mystery_solver + ' can solve this scramble.</font>';
                 document.getElementById("game.guess_box").innerHTML = html;
             }
 
@@ -129,6 +127,7 @@
                 state_html += '</h3></td>';
 				document.getElementById('scramble.state').innerHTML = state_html;
             }
+
 			setTimeout(scramble, 1000);
 		})
 		.fail(function() {
@@ -152,7 +151,11 @@
 
     <div id=wrapper>
     <tr>
-      <td> </td>
+            <td>
+                    <script type="text/javascript">
+                            document.write('<font color=green>You are ' + local.game_name + '</font>');
+                    </script>
+            </td>
       <td align=center id="game.time">Time remaining: Loading ...</td>
       <td></td>
     </tr>
@@ -182,7 +185,8 @@
         <input type="submit" value="Previous">
         </form>
       </td>
-      <td> </td>
+      <td align=center id="game.allowed">
+      </td>
       <td align=center id="next_scramble">
         <script type="text/javascript">
 	  html = '<form action="/game/'

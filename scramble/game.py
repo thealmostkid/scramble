@@ -11,8 +11,9 @@ class Game(object):
 
         self.users = users
         self.users_index = dict()
-        for user in self.users:
+        for i, user in enumerate(self.users):
             self.users_index[user.uid] = user
+            user.game_name = 'Player %d' % (i + 1)
 
         # load puzzle database
         self.puzzles = list()
@@ -87,7 +88,8 @@ class Game(object):
         if scrambl.solved is not None:
             return
 
-        scrambl.solve(uid)
+        user = self.get_user(uid)
+        scrambl.solve(user.game_name)
         mystery = self.puzzles[self.puzzle][-1]
         for index in scrambl.indices:
             mystery.scramble += scrambl.value[index - 1]

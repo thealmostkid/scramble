@@ -113,7 +113,10 @@ Options:
     stats.daemon = True
     stats.start()
 
-    if gui and not NO_GUI:
+    if gui:
+        if NO_GUI:
+            print 'Failed to load GUI.'
+            exit(0)
         gui(stats_file)
     else:
         server.join()

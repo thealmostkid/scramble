@@ -10,7 +10,11 @@ import sys
 import tempfile
 import threading
 import time
-import Tkinter
+NO_GUI = False
+try:
+    import Tkinter
+except ImportError:
+    NO_GUI = True
 
 def shutdown():
     sys.exit()
@@ -109,7 +113,7 @@ Options:
     stats.daemon = True
     stats.start()
 
-    if gui:
+    if gui and not NO_GUI:
         gui(stats_file)
     else:
         server.join()

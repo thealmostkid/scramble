@@ -103,23 +103,23 @@ Options:
     gui = False
     engine = scramble.engine.Engine()
 
-    server = threading.Thread(target=scramble.server.main, args=[engine, port])
-    server.daemon = True
-    server.start()
-
-    (stats_fd, stats_file) = tempfile.mkstemp(prefix='scramble_stats', suffix='.csv')
-    os.close(stats_fd)
-    stats = threading.Thread(target=stats_thread, args=[engine, stats_file])
-    stats.daemon = True
-    stats.start()
-
     if gui:
         if NO_GUI:
             print 'Failed to load GUI.'
             exit(0)
+
+        server = threading.Thread(target=scramble.server.main, args=[engine, port])
+        server.daemon = True
+        server.start()
+
+        (stats_fd, stats_file) = tempfile.mkstemp(prefix='scramble_stats', suffix='.csv')
+        os.close(stats_fd)
+        stats = threading.Thread(target=stats_thread, args=[engine, stats_file])
+        stats.daemon = True
+        stats.start()
         gui(stats_file)
     else:
-        server.join()
+        scramble.server.main(engine, port)
 
 if __name__ == '__main__':
     main()

@@ -118,11 +118,11 @@ def MakeHandlerClassFromArgv(engine):
                     self.wfile.write('<td>')
                     self.wfile.write('<table border=1 cellpadding=5>')
                     self.wfile.write('<tr><td>Jumble Name</td><td>Keys</td><td>Mystery</td></tr>')
-                    for scramble in puzzle.scrambles:
+                    for _scramble in puzzle.scrambles:
                         self.wfile.write('<tr>')
-                        self.wfile.write('<td>%s</td>' % scramble.name)
-                        self.wfile.write('<td>%s</td>' % ', '.join([str(key) for key in scramble.keys]))
-                        self.wfile.write('<td>%s</td>' % scramble.mystery)
+                        self.wfile.write('<td>%s</td>' % _scramble.name)
+                        self.wfile.write('<td>%s</td>' % ', '.join([str(key) for key in _scramble.keys]))
+                        self.wfile.write('<td>%s</td>' % _scramble.mystery)
                         self.wfile.write('</tr>')
                     self.wfile.write('</table>')
                     self.wfile.write('</td>')

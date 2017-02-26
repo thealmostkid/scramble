@@ -1014,17 +1014,18 @@ def MakeHandlerClassFromArgv(engine):
     return ScrambleServer
 
 def run(server_class=BaseHTTPServer.HTTPServer,
-        handler_class=BaseHTTPServer.BaseHTTPRequestHandler):
-    server_address = ('', SERVER_PORT)
+        handler_class=BaseHTTPServer.BaseHTTPRequestHandler,
+        port=SERVER_PORT):
+    server_address = ('', port)
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever()
 
-def main(engine):
+def main(engine, port):
     for i in xrange(engine.required_user_count):
         engine.create_user('faker')
     engine.poll_for_new_game()
     HandlerClass = MakeHandlerClassFromArgv(engine)
-    run(handler_class=HandlerClass)
+    run(handler_class=HandlerClass, port=port)
 
 if __name__ == '__main__':
     main(scramble.engine.Engine())

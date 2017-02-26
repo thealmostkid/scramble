@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-import os
 import scramble.engine
 import scramble.server
 import scramble.__version
+
+import docopt
+import os
 import socket
 import sys
 import tempfile
@@ -68,9 +70,36 @@ def stats_thread(engine, stats_file_name):
         time.sleep(60)
 
 def main():
+    print sys.argv
+    usage_vars = {
+        'gui': '--gui',
+        'port': '--port',
+        }
+    usage = """Scramble server.
+
+Usage:
+  scramble
+
+""".format(**usage_vars)
+
+    foo="""
+  main.py {port} <port> [{gui}]
+  main.py (-h | --help)
+  main.py --version
+Options:
+  -h --help  Show this screen.
+  --version  Show version.
+  {port}=<port>  Port to serve on.
+  {gui}  Launch a local gui.
+""".format(**usage_vars)
+    #arguments = docopt.docopt(usage, scramble.__version.version)
+    #print(arguments)
+    #exit()
+    port = int(sys.argv[2])
+    gui = False
     engine = scramble.engine.Engine()
 
-    server = threading.Thread(target=scramble.server.main, args=[engine])
+    server = threading.Thread(target=scramble.server.main, args=[engine, port])
     server.daemon = True
     server.start()
 
@@ -80,7 +109,10 @@ def main():
     stats.daemon = True
     stats.start()
 
-    gui(stats_file)
+    if gui:
+        gui(stats_file)
+    else:
+        server.join()
 
 if __name__ == '__main__':
     main()

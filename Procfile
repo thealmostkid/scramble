@@ -1,1 +1,1 @@
-web: python scramble/main.py
+web: python scramble/main.py -p $PORT

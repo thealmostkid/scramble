@@ -6,6 +6,7 @@ import scramble.__version
 import docopt
 import os
 import socket
+import signal
 import sys
 import tempfile
 import threading
@@ -119,7 +120,17 @@ Options:
         stats.start()
         gui(stats_file)
     else:
-        scramble.server.main(engine, port)
+        # this is now heroku
+        def exit_handler(signum, frame):
+            for stat in engine.stats:
+                sys.stdout.write('%s\n' % ','.join(stat))
+            exit(0)
+        try:
+            signal.signal(signal.SIGINT, exit_handler)
+            scramble.server.main(engine, port)
+        except KeyboardInterrupt as ke:
+            exit_handler('foo', 'bar')
+            raise ke
 
 if __name__ == '__main__':
     main()

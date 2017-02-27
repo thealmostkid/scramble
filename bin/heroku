@@ -1,0 +1,18 @@
+#!/bin/bash
+
+cmd=$1
+
+case $cmd in
+'start')
+	heroku ps:scale web=1
+	;;
+'stop')
+	heroku ps:scale web=0
+	;;
+'deploy')
+	git push heroku master
+	;;
+*)
+	echo "Unknown command '${cmd}'"
+	;;
+esac

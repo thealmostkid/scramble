@@ -4,6 +4,7 @@ import scramble.server
 import scramble.__version
 import scramble.dropbox_sync
 
+import datetime
 import docopt
 import os
 import signal
@@ -76,7 +77,7 @@ def stats_thread(engine, stats_file_name):
         time.sleep(60)
 
 def dropbox_thread(stats_file_name):
-    backup_name = '/gsuscramble/stats_%d.csv' % time.time()
+    backup_name = '/gsuscramble/stats_%s.csv' % datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
     while True:
         scramble.dropbox_sync.backup(stats_file_name, backup_name)
         time.sleep(60)

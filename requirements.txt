@@ -1,2 +1,3 @@
 docopt==0.6.2
+dropbox==7.2.1
 pynsist==1.6

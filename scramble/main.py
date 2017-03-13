@@ -2,11 +2,13 @@
 import scramble.engine
 import scramble.server
 import scramble.__version
+import scramble.dropbox_sync
 
+import datetime
 import docopt
 import os
-import socket
 import signal
+import socket
 import sys
 import tempfile
 import threading
@@ -74,6 +76,12 @@ def stats_thread(engine, stats_file_name):
                 output.write('%s\n' % ','.join(stat))
         time.sleep(60)
 
+def dropbox_thread(stats_file_name):
+    backup_name = '/gsuscramble/stats_%s.csv' % datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    while True:
+        scramble.dropbox_sync.backup(stats_file_name, backup_name)
+        time.sleep(60)
+
 def main():
     print sys.argv
     usage_vars = {
@@ -104,6 +112,12 @@ Options:
     gui = False
     engine = scramble.engine.Engine()
 
+    (stats_fd, stats_file) = tempfile.mkstemp(prefix='scramble_stats', suffix='.csv')
+    os.close(stats_fd)
+    stats = threading.Thread(target=stats_thread, args=[engine, stats_file])
+    stats.daemon = True
+    stats.start()
+
     if gui:
         if NO_GUI:
             print 'Failed to load GUI.'
@@ -113,13 +127,13 @@ Options:
         server.daemon = True
         server.start()
 
-        (stats_fd, stats_file) = tempfile.mkstemp(prefix='scramble_stats', suffix='.csv')
-        os.close(stats_fd)
-        stats = threading.Thread(target=stats_thread, args=[engine, stats_file])
-        stats.daemon = True
-        stats.start()
         gui(stats_file)
     else:
+        # sync data to dropbox
+        dropbox = threading.Thread(target=dropbox_thread, args=[stats_file])
+        dropbox.daemon = True
+        dropbox.start()
+
         # this is now heroku
         def exit_handler(signum, frame):
             for stat in engine.stats:

@@ -15,11 +15,7 @@ import operator
 import scramble.engine
 import scramble.puzzle
 
-
-print scramble.engine.MYSTERY_ALGOS
-
 SERVER_PORT = 8001
-
 
 # transition screen when game is locked
 

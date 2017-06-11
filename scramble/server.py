@@ -220,6 +220,29 @@ def MakeHandlerClassFromArgv(engine):
                 self.wfile.write('<br>')
                 self.wfile.write('<a href="/admin">Back To Admin</a>')
                 self.wfile.write('</body></html>')
+            elif 'solved' == cmd:
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                self.wfile.write('<html><body>')
+                self.wfile.write('<a href="/admin">Back To Admin</a>')
+
+                self.wfile.write('<table border=1>')
+                self.wfile.write('<tr><th>Workstation ID</th><th>Scramble Sets Solved</th></tr>')
+                for game in engine.games.values():
+                    player_stats = self._solved_game_stats(game)
+                    for stats in player_stats.values():
+                        self.wfile.write('<tr><td>')
+                        self.wfile.write(str(stats['real_name']))
+                        self.wfile.write('</td><td>')
+                        #self.wfile.write(str(stats['solved'] + stats['mystery']))
+                        self.wfile.write(str(stats['sets']))
+                        self.wfile.write('</td></tr>')
+                self.wfile.write('</table>')
+
+                self.wfile.write('<a href="/admin">Back To Admin</a>')
+                self.wfile.write('</body></html>')
+
             else:
                 self.send_error(404)
 
@@ -554,6 +577,7 @@ def MakeHandlerClassFromArgv(engine):
             # list of puzzle ids
             default_stats = {
                     'name': 'Unknown',
+                    'real_name': 'Unknown',
                     'solved': 0,
                     'mystery': 0,
                     'letters': 0,
@@ -563,6 +587,7 @@ def MakeHandlerClassFromArgv(engine):
             for player in game.users:
                 players[player.game_name] = dict(default_stats)
                 players[player.game_name]['name'] = player.game_name
+                players[player.game_name]['real_name'] = player.real_name
             return players
 
         def _puzzle_stats(self, players, puzzle):
@@ -1017,8 +1042,8 @@ def run(server_class=BaseHTTPServer.HTTPServer,
     httpd.serve_forever()
 
 def main(engine, port):
-    for i in xrange(engine.required_user_count):
-        engine.create_user('faker')
+    #for i in xrange(engine.required_user_count):
+    #    engine.create_user('faker')
     engine.poll_for_new_game()
     HandlerClass = MakeHandlerClassFromArgv(engine)
     run(handler_class=HandlerClass, port=port)

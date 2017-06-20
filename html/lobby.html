@@ -13,8 +13,8 @@
 
                                         document.getElementById('user').innerHTML = user_html;
                                         if (data.gid) {
-                                        game_html = "<p>For today's session you have been assigned the role of <b>" + data.game_name + "</b>.";
-
+                                        game_html = "<p>For today's session you have been assigned the role of <b>" + data.game_name + "</b>.</p>";
+                                        game_html += "<p><b><u>Do not click start yet!</u></b><br>The facilitator will hand out the last set of instructions and tell the session when to click the start button.</p>";
                                         game_html += "<form action='/game/" + data.gid + "/user/" + local.uid + "' method='get'>" +
                                         "<input type='submit' value='Start'>" +
                                         "</form>";

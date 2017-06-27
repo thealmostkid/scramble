@@ -3,12 +3,11 @@ function draw_stats(players) {
   solved = 0;
   letters = 0;
   results_html = '<table style="border-collapse: collapse;" border=1>';
-  results_html += '<tr><th>Player</th><th>Workstation Number</th><th>Scrambles Solved</th><th>Key Letters</th><th>Scramble Sets Solved</th></tr>'
+  //results_html += '<tr><th>Player</th><th>Workstation Number</th><th>Scrambles Solved</th><th>Key Letters</th><th>Scramble Sets Solved</th></tr>'
+  results_html += '<tr><th>Player</th><th>Scrambles Solved</th><th>Key Letters</th><th>Scramble Sets Solved</th></tr>'
   for (var player in players) {
     results_html += '<tr><td>';
     results_html += players[player].name;
-    results_html += '</td><td>';
-    results_html += players[player].real_name;
     results_html += '</td><td>';
     results_html += players[player].solved + players[player].mystery;
     results_html += '</td><td>';

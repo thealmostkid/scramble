@@ -82,7 +82,7 @@ input[type=text]:focus{
 
 input[type=submit]{
     background-color: blue; 
-	width: 120px;
+	/*width: 120px;*/
 	height: 40px;
     border: none;
     color: white;
@@ -96,5 +96,4 @@ input[type=submit]{
 table {table-layout:fixed;}
 td {width:33%}
 
-}
 </style>

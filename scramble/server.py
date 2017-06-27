@@ -228,7 +228,7 @@ def MakeHandlerClassFromArgv(engine):
                 self.wfile.write('<a href="/admin">Back To Admin</a>')
 
                 self.wfile.write('<table border=1>')
-                self.wfile.write('<tr><th>Workstation ID</th><th>Scramble Sets Solved</th></tr>')
+                self.wfile.write('<tr><th>Workstation ID</th><th>Scramble Sets Solved</th><th>Mystery Solver</th></tr>')
                 for game in engine.games.values():
                     player_stats = self._solved_game_stats(game)
                     for stats in player_stats.values():
@@ -237,6 +237,11 @@ def MakeHandlerClassFromArgv(engine):
                         self.wfile.write('</td><td>')
                         #self.wfile.write(str(stats['solved'] + stats['mystery']))
                         self.wfile.write(str(stats['sets']))
+                        self.wfile.write('</td><td>')
+                        for player in game.users:
+                            if stats['real_name'] == player.real_name:
+                                self.wfile.write(str(player.mystery_solver))
+                        #self.wfile.write(str(stats['solved'] + stats['mystery']))
                         self.wfile.write('</td></tr>')
                 self.wfile.write('</table>')
 
@@ -418,7 +423,7 @@ def MakeHandlerClassFromArgv(engine):
             time_remaining = game.timer()
             state = None
             if game.solved:
-                state = 'All Scrambles Solved!  Beginning next puzzle set.'
+                state = 'Closed Scramble Solved!  Beginning next puzzle set.'
             elif time_remaining <= 0:
                 state = 'Time expired.  Beginning next puzzle set.'
             player_stats = self._solved_puzzle_stats(game)
@@ -591,7 +596,7 @@ def MakeHandlerClassFromArgv(engine):
             return players
 
         def _puzzle_stats(self, players, puzzle):
-            for scrambl in puzzle:
+            for scrambl in puzzle.scrambles:
                 if scrambl.solved is not None:
                     solver = scrambl.solved
                     if solver not in players:
@@ -703,7 +708,6 @@ def MakeHandlerClassFromArgv(engine):
                 self.send_error(404, 'Unknown game id %s' % gid)
                 return
 
-            # NAT:
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()

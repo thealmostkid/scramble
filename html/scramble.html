@@ -15,7 +15,7 @@
 
     function pad(n){return n<10 ? '0'+n : n}
 
-    function popUp(message, visible) {
+    function popUp(message, visible, buttonText) {
             html = '<div style="padding:5px;float:bottom;">' + message + '</div>';
             html += '<br>';
             html += '<form action = "/game/';
@@ -24,7 +24,7 @@
             html += '<input type="hidden" name="uid" value="';
             html += local.uid;
             html += '">';
-            html += '<input type="submit" value="Continue">';
+            html += '<input type="submit" value="' + buttonText + '">';
             html += '</form>';
 
             popup = document.getElementById("popup");
@@ -78,11 +78,11 @@
             if (data.state) {
                 stats_html = draw_stats(data.player_stats);
                 text = data.state + "<br>" + stats_html;
-                popUp(text, true);
+                popUp(text, true, 'Start Next Scramble Set');
             } else if (local.message) {
-                popUp(local.message, true);
+                popUp(local.message, true, 'Continue');
             } else {
-                popUp('', false);
+                popUp('', false, 'Continue');
 			    setTimeout(activity, 1000);
             }
 		})
@@ -306,7 +306,7 @@
         document.getElementById("next_scramble").style.visibility = "hidden";
     }
     if (local.message) {
-        popUp(local.message, true);
+        popUp(local.message, true, 'Continue');
     }
 </script>
 

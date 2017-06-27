@@ -37,13 +37,14 @@ class Game(object):
                 scrambles.append(scrambl)
                 p = p + 1
 
-            self.puzzles.append(scrambles)
+            pzl = scramble.parser.Puzzle(puzzle.name, puzzle.seconds, scrambles)
+            self.puzzles.append(pzl)
             
             g = g + 1
 
         self.scrambles_index = dict()
         for puzzle in self.puzzles:
-            for scrambl in puzzle:
+            for scrambl in puzzle.scrambles:
                 self.scrambles_index[scrambl.pid] = scrambl
 
         # set up game for first puzzle
@@ -70,13 +71,13 @@ class Game(object):
 
     def user_ready(self, uid):
         user = self.get_user(uid)
-        user.scramble = self.puzzles[self.puzzle][0]
+        user.scramble = self.puzzles[self.puzzle].scrambles[0]
         # timer for first puzzle starts when all users are ready
         self.start = time.time()
 
     def timer(self):
         elapsed = int(time.time() - self.start)
-        return self.time_limit - elapsed
+        return self.puzzles[self.puzzle].seconds - elapsed
 
     def get_scramble(self, pid):
         return self.scrambles_index[pid]
@@ -91,7 +92,7 @@ class Game(object):
 
         user = self.get_user(uid)
         scrambl.solve(user.game_name)
-        mystery = self.puzzles[self.puzzle][-1]
+        mystery = self.puzzles[self.puzzle].scrambles[-1]
         for index in scrambl.indices:
             mystery.scramble += scrambl.value[index - 1]
         self.solved = mystery.solved is not None

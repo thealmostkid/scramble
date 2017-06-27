@@ -330,9 +330,7 @@ def MakeHandlerClassFromArgv(engine):
 
             assert(gid is not None)
             game_stats = sorted([stat for stat in engine.stats if stat[2] == gid], key=operator.itemgetter(1))
-            print game_stats
             for stat in game_stats:
-                print stat
                 if stat[1] == 'puzzle_solve':
                     results['puzzle_solve'] = results['puzzle_solve'] + 1
                 elif stat[1] == 'puzzle_expired':
@@ -423,9 +421,9 @@ def MakeHandlerClassFromArgv(engine):
             time_remaining = game.timer()
             state = None
             if game.solved:
-                state = 'Closed Scramble Solved!  Beginning next puzzle set.'
+                state = '<b><u>Closed Scramble Solved!</u></b><br><br>Beginning next puzzle set.'
             elif time_remaining <= 0:
-                state = 'Time expired.  Beginning next puzzle set.'
+                state = '<b><u>Time expired.</u></b><br><br>Beginning next puzzle set.'
             player_stats = self._solved_puzzle_stats(game)
 
             values = {'timer': time_remaining if time_remaining > 0 else 0,

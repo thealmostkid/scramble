@@ -1,7 +1,7 @@
 import scramble.puzzle
 import time
 
-DUMMY_SCRAMBLE = scramble.puzzle.Scramble('000', 'dummy', '', '')
+DUMMY_SCRAMBLE = scramble.puzzle.Scramble('000', '0', '', '')
 
 class Game(object):
     def __init__(self, gid, time_limit, users, puzzle_database):

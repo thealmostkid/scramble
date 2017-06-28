@@ -76,8 +76,11 @@ class Game(object):
         self.start = time.time()
 
     def timer(self):
-        elapsed = int(time.time() - self.start)
-        return self.puzzles[self.puzzle].seconds - elapsed
+        try:
+            elapsed = int(time.time() - self.start)
+            return self.puzzles[self.puzzle].seconds - elapsed
+        except IndexError:
+            return 0
 
     def get_scramble(self, pid):
         return self.scrambles_index[pid]

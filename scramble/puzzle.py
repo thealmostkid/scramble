@@ -3,6 +3,170 @@ Logic for running a scramble.
 '''
 
 DEFAULT = '''
+jumble s1 ADOPT PTOAD
+jumble s2 BLOOD DOBOL
+jumble s3 RIVER RIERV
+jumble s4 INCOME CMEINO
+jumble s5 FEMALE MFEEAL
+jumble s6 TOWARD ADTWOR
+jumble s7 ADMIRE RIEMAD
+
+jumble s8 CHALK LACKH
+jumble s9 THANK HNKTA
+jumble s10 PLANET NTAPLE
+jumble s11 STRESS SETSRS
+jumble s12 MONEY ENYOM
+jumble s13 CLOUDY YUDCOL
+jumble s14 HEALTH HHLATE
+
+jumble s15 DRAWN RNADW
+jumble s16 STYLE LTYES
+jumble s17 IRONY YONRI
+jumble s18 MELODY OLDMEY
+jumble s19 PENCIL CLNPIE
+jumble s20 WALNUT AWLUTN
+jumble s21 AIRWAY RAWIYA
+
+jumble s22 OMEGA GEMAO
+jumble s23 ERROR REORR
+jumble s24 KNIGHT THINGK
+jumble s25 TATTOO TOTOAT
+jumble s26 CHAIR HRIAC
+jumble s27 LAWYER WYERAL
+jumble s28 MATTER MERTAT
+
+jumble s29 HEAVY YEHAV
+jumble s30 BLOOM MOLOB
+jumble s31 GRAVE RAGEV
+jumble s32 LIZARD ZLARDI
+jumble s33 FAMOUS SOMUAF
+jumble s34 GAMBLE AEMGLB
+jumble s35 BAMBOO BOMAOB
+
+jumble s36 GILLS LGSIL
+jumble s37 JOLLY YLOJL
+jumble s38 GUZZLE ZEGZLU
+jumble s39 IMMUNE MIENMU
+jumble s40 NUDGE DGENU
+jumble s41 COTTON TTOCNO
+jumble s42 JUNGLE GLJUNE
+
+jumble s43 FLOSS SLOFS
+jumble s44 OVENS NVOSE
+jumble s45 ZIPPER PIERPZ
+jumble s46 POCKET CPOTKE
+jumble s47 BROWN NOBWR
+jumble s48 JETLAG TAGEJL
+jumble s49 LOSSES LSSOSE
+
+jumble s50 AWFUL FLWUA
+jumble s51 JUICY CUYIJ
+jumble s52 OFFEND EFFDON
+jumble s53 JEWELS SEWJEL
+jumble s54 MERGE RGEME
+jumble s55 CIRCUS CSUCIR
+jumble s56 JOYFUL YOUJLF
+
+jumble s57 JOINT INJOT
+jumble s58 GRASS SAGRS
+jumble s59 EYELID DEELYI
+jumble s60 SUPPLY PLSYUP
+jumble s61 DRINK NIRDK
+jumble s62 OUTFIT TUFOIT
+jumble s63 ESSAYS SSYSAE
+
+puzzle warmup seconds 180
+jumble s2
+jumble s4
+jumble s6 keys 6
+jumble s5 keys 3,4
+jumble s1
+jumble s3 keys 1,2,4
+jumble s7 mystery
+elzzup
+
+puzzle p1 seconds 180
+jumble s12
+jumble s11
+jumble s8 keys 2,3,4
+jumble s10 keys 5
+jumble s9 keys 1,2
+jumble s13
+jumble s14 mystery
+elzzup
+
+puzzle p2 seconds 180
+jumble s15 keys 2,3,4
+jumble s18
+jumble s20 keys 2
+jumble s16
+jumble s17 keys 1,5
+jumble s19
+jumble s21 mystery
+elzzup
+
+puzzle p3 seconds 180
+jumble s22 keys 2,3
+jumble s23 keys 2
+jumble s24
+jumble s25 keys 1,2,4
+jumble s26
+jumble s27
+jumble s28 mystery
+elzzup
+
+puzzle p4 seconds 180
+jumble s29
+jumble s31
+jumble s33 keys 2,4
+jumble s34 keys 4
+jumble s30 keys 1,3,5
+jumble s32
+jumble s35 mystery
+elzzup
+
+puzzle p5 seconds 180
+jumble s36 keys 1,4
+jumble s37 keys 1
+jumble s40
+jumble s39 keys 4,5,6
+jumble s38
+jumble s41
+jumble s42 mystery
+elzzup
+
+puzzle p6 seconds 180
+jumble s48 
+jumble s47
+jumble s43 keys 2,4,5
+jumble s44 keys 1,5
+jumble s45 keys 5
+jumble s46 
+jumble s49 mystery
+elzzup
+
+puzzle p7 seconds 180
+jumble s50
+jumble s54
+jumble s55
+jumble s53 keys 5
+jumble s52 keys 1,3
+jumble s51 keys 1,2,5
+jumble s56 mystery
+elzzup
+
+puzzle p8 seconds 180
+jumble s57
+jumble s62
+jumble s59 keys 2,3
+jumble s60 keys 1
+jumble s61
+jumble s58 keys 3,4,5
+jumble s63 mystery
+elzzup
+'''
+
+OLD = '''
 jumble s1 AFFORD DFROFA 
 jumble s2 UPPER PRPUE
 jumble s3 BELLS SELBL  

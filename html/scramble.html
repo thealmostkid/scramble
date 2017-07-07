@@ -11,11 +11,13 @@
 <script type="text/javascript">
     var user = undefined;
     var message = undefined;
+    var popupTimer = undefined;
     LOCAL
 
     function pad(n){return n<10 ? '0'+n : n}
+    function popupAdvance(){ document.getElementById("popup_button").style.visibility = "visible"; }
 
-    function popUp(message, visible, buttonText) {
+    function popUp(message, visible, buttonText, waitTime) {
             html = '<div style="padding:5px;float:bottom;">' + message + '</div>';
             html += '<br>';
             html += '<form action = "/game/';
@@ -24,14 +26,17 @@
             html += '<input type="hidden" name="uid" value="';
             html += local.uid;
             html += '">';
-            html += '<input type="submit" value="' + buttonText + '">';
+            html += '<input id="popup_button" style="visibility:hidden" type="submit" value="' + buttonText + '">';
             html += '</form>';
 
             popup = document.getElementById("popup");
             popup.innerHTML = html;
+
             if (visible) {
                 popup.style.visibility = "visible";
                 document.getElementById("main").style.opacity = "0.1";
+                clearTimeout(popupTimer);
+                popupTimer = setTimeout(popupAdvance, waitTime);
             } else {
                 popup.style.visibility = "hidden";
                 document.getElementById("main").style.opacity = "1.0";
@@ -78,11 +83,11 @@
             if (data.state) {
                 stats_html = draw_stats(data.player_stats);
                 text = data.state + "<br>" + stats_html;
-                popUp(text, true, 'Start Next Scramble Set');
+                popUp(text, true, 'Start Next Scramble Set', 15000);
             } else if (local.message) {
-                popUp(local.message, true, 'Continue');
+                popUp(local.message, true, 'Continue', 0);
             } else {
-                popUp('', false, 'Continue');
+                popUp('', false, 'Continue', 0);
 			    setTimeout(activity, 1000);
             }
 		})
@@ -306,7 +311,7 @@
         document.getElementById("next_scramble").style.visibility = "hidden";
     }
     if (local.message) {
-        popUp(local.message, true, 'Continue');
+        popUp(local.message, true, 'Continue', 0);
     }
 </script>
 

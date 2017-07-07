@@ -421,9 +421,9 @@ def MakeHandlerClassFromArgv(engine):
             time_remaining = game.timer()
             state = None
             if game.solved:
-                state = '<b><u>Closed Scramble Solved!</u></b><br><br>Beginning next puzzle set.'
+                state = '<b><u>Closed Scramble Solved!</u></b><br><br>Beginning next round.'
             elif time_remaining <= 0:
-                state = '<b><u>Time expired.</u></b><br><br>Beginning next puzzle set.'
+                state = '<b><u>Time expired.</u></b><br><br>Beginning next round.'
             player_stats = self._solved_puzzle_stats(game)
 
             values = {'timer': time_remaining if time_remaining > 0 else 0,

@@ -109,8 +109,9 @@ Options:
     #print(arguments)
     #exit()
     port = int(sys.argv[2])
+    condition = os.getenv('CONDITION', 'DEFAULT')
     gui = False
-    engine = scramble.engine.Engine()
+    engine = scramble.engine.Engine(condition)
 
     (stats_fd, stats_file) = tempfile.mkstemp(prefix='scramble_stats', suffix='.csv')
     os.close(stats_fd)

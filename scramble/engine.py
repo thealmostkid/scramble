@@ -164,7 +164,8 @@ names = [
 MYSTERY_ALGOS = [ 'random', 'rotate', 'high' ]
 
 class Engine(object):
-    def __init__(self):
+    def __init__(self, condition):
+        self.condition = condition
         self.games = dict()
         self.users = dict()
         self.stats = list()

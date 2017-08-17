@@ -581,6 +581,8 @@ def MakeHandlerClassFromArgv(engine):
             default_stats = {
                     'name': 'Unknown',
                     'real_name': 'Unknown',
+                    'is_mystery': False,
+                    'pay_type': 'Unknown',
                     'solved': 0,
                     'mystery': 0,
                     'letters': 0,
@@ -591,6 +593,8 @@ def MakeHandlerClassFromArgv(engine):
                 players[player.game_name] = dict(default_stats)
                 players[player.game_name]['name'] = player.game_name
                 players[player.game_name]['real_name'] = player.real_name
+                players[player.game_name]['is_mystery'] = player.mystery_solver
+                players[player.game_name]['pay_type'] = player.pay_type
             return players
 
         def _puzzle_stats(self, players, puzzle):

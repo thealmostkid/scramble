@@ -162,10 +162,28 @@ names = [
 ]
 
 MYSTERY_ALGOS = [ 'random', 'rotate', 'high' ]
+COND_SAME_VARIABLE ='samevariable'
+COND_SAME_FIXED = 'samefixed'
+COND_MIXED_VARIABLE = 'mixedvariable'
+COND_MIXED_FIXED = 'mixfixed'
+COND_FIXED = 'fixed'
+COND_VARIABLE = 'variable'
+PAY_CONDITIONS = [
+    COND_SAME_VARIABLE,
+    COND_SAME_FIXED,
+    COND_MIXED_VARIABLE,
+    COND_MIXED_FIXED,
+    COND_FIXED,
+    COND_VARIABLE
+    ]
+PAY_VARIABLE = 'Variable'
+PAY_FIXED = 'Fixed'
 
 class Engine(object):
-    def __init__(self, condition):
-        self.condition = condition
+    def __init__(self, pay_condition):
+        self.pay_condition = pay_condition.lower()
+        if self.pay_condition not in PAY_CONDITIONS:
+            raise ValueError('Unknown pay condition "%s"' % pay_condition)
         self.games = dict()
         self.users = dict()
         self.stats = list()
@@ -205,6 +223,62 @@ class Engine(object):
         # seven minutes
         return self.time_limit
 
+    def _select_pay_type(self, user_list):
+        '''Updates the pay types for each user in the list.
+
+        user_list: set of users to modify pay type.
+        '''
+        # Same Variable
+        if self.pay_condition == COND_SAME_VARIABLE:
+            for user in user_list:
+                if user.mystery_solver:
+                    user.pay_type = PAY_VARIABLE
+                else:
+                    user.pay_type = PAY_FIXED
+        # Same Fixed
+        elif self.pay_condition == COND_SAME_FIXED:
+            for user in user_list:
+                if user.mystery_solver:
+                    user.pay_type = PAY_FIXED
+                else:
+                    user.pay_type = PAY_VARIABLE
+        # Mixed Variable
+        elif self.pay_condition == COND_MIXED_VARIABLE:
+            count = 0
+            for user in user_list:
+                if user.mystery_solver:
+                    user.pay_type = PAY_VARIABLE
+                    continue
+                elif count % 2 == 1:
+                    user.pay_type = PAY_VARIABLE
+                else:
+                    user.pay_type = PAY_FIXED
+                count += 1
+        # Mixed Fixed
+        elif self.pay_condition == COND_MIXED_FIXED:
+            count = 0
+            for user in user_list:
+                if user.mystery_solver:
+                    user.pay_type = PAY_FIXED
+                    continue
+                elif count % 2 == 1:
+                    user.pay_type = PAY_VARIABLE
+                else:
+                    user.pay_type = PAY_FIXED
+                count += 1
+        # Fixed
+        elif self.pay_condition == COND_FIXED:
+            for user in user_list:
+                user.pay_type = PAY_FIXED
+        # Variable
+        elif self.pay_condition == COND_VARIABLE:
+            for user in user_list:
+                user.pay_type = PAY_VARIABLE
+        else:
+            raise ValueError('Cannot assign pay for condition "%s"' % self.pay_condition)
+        for user in user_list:
+            self.record_stat(time.time(), 'pay_type', user.uid, user.pay_type)
+
     def create_game(self, user_list):
         '''Creates a game with the given list of users.
 
@@ -235,6 +309,7 @@ class Engine(object):
         for user in user_list:
             user.game = game
         mystery_user = self._select_mystery_solver(user_list).mystery_solver = True
+        self._select_pay_type(user_list)
         for user in user_list:
             self.record_stat(game.start, 'game_name', user.game_name, user.uid)
             if user.mystery_solver:
@@ -250,3 +325,39 @@ class Engine(object):
 
     def record_stat(self, timestamp, event_name, item, value):
         self.stats.append(['%d' % timestamp, str(event_name), str(item), str(value)])
+
+def main():
+    fail_count = 0
+
+    # variable
+
+    for user_count in [3, 5, 6]:
+        for cond in PAY_CONDITIONS:
+            print '------ %s -------' % cond
+            e = Engine(cond)
+            user_list = [e.create_user('%d' % i) for i in range(0, user_count)]
+            user_list[1].mystery_solver = True
+            e._select_pay_type(user_list)
+            for user in user_list:
+                print '%s, %s, %s' % (user.real_name, user.pay_type, user.mystery_solver)
+
+    try:
+        e = Engine('BadCond')
+        print 'Fail constructor bad cond'
+        fail_count += 1
+    except ValueError as ve:
+        print 'Passed'
+
+    try:
+        e = Engine(COND_VARIABLE)
+        e.pay_condition = 'Foobar'
+        e._select_pay_type(user_list)
+        print 'Fail pay_type bad cond'
+        fail_count += 1
+    except ValueError as ve:
+        print 'Passed'
+
+    return fail_count
+
+if __name__ == '__main__':
+    exit(main())

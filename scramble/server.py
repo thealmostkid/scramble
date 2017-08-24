@@ -244,7 +244,6 @@ def MakeHandlerClassFromArgv(engine):
                                 self.wfile.write(str(player.mystery_solver))
                         #self.wfile.write(str(stats['solved'] + stats['mystery']))
                         self.wfile.write('</td><td>')
-                        # NAT
                         self.wfile.write(str(stats['pay_type']))
                         self.wfile.write('</td></tr>')
                 self.wfile.write('</table>')
@@ -822,7 +821,7 @@ def MakeHandlerClassFromArgv(engine):
                     errors += 'Missing mystery solver selection<br>'
 
                 # TODO: implement these
-                print 'GAME COUNT = %d' % int(params['game_count'][0])
+                #print 'GAME COUNT = %d' % int(params['game_count'][0])
 
                 if len(errors) > 0:
                     self.send_error(400, 'Invalid configuration')

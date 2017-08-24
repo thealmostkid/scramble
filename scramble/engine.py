@@ -168,6 +168,7 @@ COND_MIXED_VARIABLE = 'mixedvariable'
 COND_MIXED_FIXED = 'mixedfixed'
 COND_FIXED = 'fixed'
 COND_VARIABLE = 'variable'
+COND_DEFAULT = COND_FIXED
 PAY_CONDITIONS = [
     COND_SAME_VARIABLE,
     COND_SAME_FIXED,
@@ -183,7 +184,10 @@ class Engine(object):
     def __init__(self, pay_condition):
         self.pay_condition = pay_condition.lower()
         if self.pay_condition not in PAY_CONDITIONS:
-            raise ValueError('Unknown pay condition "%s"' % pay_condition)
+            if self.pay_condition == 'default':
+                self.pay_condition = COND_DEFAULT
+            else:
+                raise ValueError('Unknown pay condition "%s"' % pay_condition)
         self.games = dict()
         self.users = dict()
         self.stats = list()

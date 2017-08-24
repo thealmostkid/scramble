@@ -173,6 +173,7 @@ def MakeHandlerClassFromArgv(engine):
                     else:
                         output.write('<td>None</td>')
                     output.write('<td>%s</td>' % user.mystery_solver)
+                    output.write('<td>%s</td>' % user.pay_type)
                     output.write('</tr>')
 
                 # active games
@@ -183,7 +184,7 @@ def MakeHandlerClassFromArgv(engine):
 
                     self.wfile.write('<tr><td>')
                     self.wfile.write('<table border=2>')
-                    self.wfile.write('<tr><th>user</th><th>name</th><th>Scramble</th><th>mystery</th></tr>')
+                    self.wfile.write('<tr><th>user</th><th>name</th><th>Scramble</th><th>mystery</th><th>pay type</th></tr>')
                     # users
                     for user in game.users:
                         dump_user(user, self.wfile)
@@ -228,7 +229,7 @@ def MakeHandlerClassFromArgv(engine):
                 self.wfile.write('<a href="/admin">Back To Admin</a>')
 
                 self.wfile.write('<table border=1>')
-                self.wfile.write('<tr><th>Workstation ID</th><th>Scramble Sets Solved</th><th>Mystery Solver</th></tr>')
+                self.wfile.write('<tr><th>Workstation ID</th><th>Scramble Sets Solved</th><th>Mystery Solver</th><th>Pay Type</th></tr>')
                 for game in engine.games.values():
                     player_stats = self._solved_game_stats(game)
                     for stats in player_stats.values():
@@ -242,6 +243,9 @@ def MakeHandlerClassFromArgv(engine):
                             if stats['real_name'] == player.real_name:
                                 self.wfile.write(str(player.mystery_solver))
                         #self.wfile.write(str(stats['solved'] + stats['mystery']))
+                        self.wfile.write('</td><td>')
+                        # NAT
+                        self.wfile.write(str(stats['pay_type']))
                         self.wfile.write('</td></tr>')
                 self.wfile.write('</table>')
 
